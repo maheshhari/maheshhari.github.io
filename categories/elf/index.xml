@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ELF on slashb4sh</title>
+    <link>/categories/elf/</link>
+    <description>Recent content in ELF on slashb4sh</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Tue, 04 Feb 2020 13:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/categories/elf/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Think-twice - HackTM 2020</title>
+      <link>/blog/thinktwice/</link>
+      <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/thinktwice/</guid>
+      <description>Linux userpace exploitation by parsing ELF for symbol addresses with arbitary read
+Challenge points: 491 No. of solves: 14 Solved by : @sherl0ck, @slashb4sh
+The challenge program is rather simple. You get infinite number of arbitary reads, and one arbitary write. The libc is not given and the path of the loader is specified as ./loader.so, hinting that a custom libc and loader is used. This is confirmed as no libc version matches are found on libc database search with the leaks obtained from the server.</description>
+    </item>
+    
+  </channel>
+</rss>

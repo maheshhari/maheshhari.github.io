@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Windows 7 Kernel Pool Internals - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/win7kernelpoolinternals/" />
+    <meta property="og:title" content="Windows 7 Kernel Pool Internals" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="Windows 7 Kernel Pool Internals" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/win7kernelpoolinternals/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        Windows 7 Kernel Pool Internals
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Sat Feb 8 2020 00:00:00 UTC'>
+                            February 08, 2020
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            12 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Notes on Windows 7 Kernel Pool Internals that I learned from this <a href="https://media.blackhat.com/bh-dc-11/Mandt/BlackHat_DC_2011_Mandt_kernelpool-wp.pdf?source=post_page---------------------------">paper</a></p>
+<!-- raw HTML omitted -->
+<h3 id="numa-non-uniform-memory-architecture">NUMA (Non-uniform Memory Architecture)</h3>
+<ul>
+<li>Dedicate different memory bank for different processors</li>
+<li>Quicker access to local memory</li>
+<li>Processors and memory are maintained in units called nodes via the <code>KNODE</code> structure in kernel.</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_KNODE
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> PagedPoolSListHead : _SLIST_HEADER
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x010</span> NonPagedPoolSListHead : [<span style="color:#ae81ff">3</span>] _SLIST_HEADER
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x040</span> Affinity         : _GROUP_AFFINITY
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x050</span> ProximityId      : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x054</span> NodeNumber       : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x056</span> PrimaryNodeNumber : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x058</span> MaximumProcessors : UChar
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x059</span> Color            : UChar
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x05a</span> Flags            : _flags
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x05b</span> NodePad0         : UChar
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x05c</span> Seed             : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x060</span> MmShiftedColor   : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x068</span> FreeCount        : [<span style="color:#ae81ff">2</span>] Uint8B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x078</span> Right            : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x07c</span> Left             : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x080</span> CachedKernelStacks : _CACHED_KSTACK_LIST
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x0a0</span> ParkLock         : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x0a4</span> NodePad1         : Uint4B
+</code></pre></div><ul>
+<li>Multi-node system; nt!KeNumberNodes &gt; 1</li>
+<li>KNODE-&gt;Color is an array index used by allocation and free algorithms to associate nodes with pool</li>
+<li>KNODE has 4 singly linked lookaside list of free pool pages for each node</li>
+</ul>
+<h3 id="system-memory-pools">System Memory Pools</h3>
+<p>Memory pools are dynamically created at system initialization based on the number of system nodes. Each pool is defined by a pool descriptor.</p>
+<h3 id="two-types-of-pool-memory">Two types of pool memory:</h3>
+<h4 id="paged">Paged</h4>
+<ul>
+<li>Can be accessed from any processor</li>
+<li>IRQL &lt; Dispatch_Level(2)</li>
+<li>Number of paged pool: <code>nt!ExpNumberOfPagedPools</code></li>
+<li>Uniprocessor - 4 paged pools (index 1-4)</li>
+<li>Multiprocessor - 1 per node (index 1)</li>
+<li>Extra pool descriptor in each for prototype pools / full page allocations (index 0)</li>
+<li>All pool descriptors are maintained in <code>nt!ExpPagedPoolDescriptor</code> array.</li>
+</ul>
+<h4 id="non-paged">Non-paged</h4>
+<ul>
+<li>Present in Physical memory always</li>
+<li>For threads at IRQL &gt;= Dispatch_level(2) no page faults = speed</li>
+<li>Number of non-paged pool: <code>nt!ExpNumberOfNonPagedPools</code></li>
+<li>Uniprocessor - 1st index in <code>nt!PoolVector</code> points to non-paged pool descriptor</li>
+<li>Multiprocessor - each node has one non-paged pool, descriptors stored in <code>nt!ExpNonPagedPoolDescriptor</code> array</li>
+</ul>
+<h4 id="session-pool">Session pool</h4>
+<ul>
+<li>Used by win32K</li>
+<li>Unique to each session</li>
+<li>Paged and non-paged session pool</li>
+<li>Non-paged session memory uses global non-paged pool descriptor</li>
+<li>Paged session memory has unique descriptor in <code>nt!MM_SESSION_SPACE</code></li>
+<li>Session pool descriptor obtained from <code>nt!EPROCESS</code></li>
+</ul>
+<h3 id="pool-descriptor">Pool Descriptor</h3>
+<ul>
+<li><code>nt!POOL_DESCRIPTOR</code></li>
+<li>Kernel pool managed by pool descriptor</li>
+<li>It tracks:
+<ul>
+<li>Running allocations</li>
+<li>Pages in use</li>
+<li>Free chunks</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_pool_descriptor
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> PoolType         : _POOL_TYPE
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x008</span> PagedLock        : _KGUARDED_MUTEX
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x008</span> NonPagedLock     : Uint8B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x040</span> RunningAllocs    : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x044</span> RunningDeAllocs  : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x048</span> TotalBigPages    : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x04c</span> ThreadsProcessingDeferrals : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x050</span> TotalBytes       : Uint8B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x080</span> PoolIndex        : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x0c0</span> TotalPages       : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x100</span> PendingFrees     : Ptr64 Ptr64 Void
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x108</span> PendingFreeDepth : Int4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x140</span> ListHeads        : [<span style="color:#ae81ff">256</span>] _LIST_ENTRY
+</code></pre></div><ul>
+<li>PendingFrees - singly-linked list of chunks waiting to be freed</li>
+<li>ListHeads - doubly-linked list of free chunks of the same size</li>
+</ul>
+<h4 id="listheads-lists-amd64">ListHeads Lists (AMD64)</h4>
+<ul>
+<li>Chunk size less than a page</li>
+<li>Granularity  - 0x10 bytes</li>
+<li>Blocksize = (NumberOfBytes + 0x1F) &raquo; 4</li>
+<li>Size of block = Blocksize * Granularity</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">&gt;&gt;</span><span style="color:#f92672">&gt;</span> (<span style="color:#ae81ff">0</span><span style="color:#f92672">+</span><span style="color:#ae81ff">0x1f</span>)<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">4</span>
+<span style="color:#ae81ff">1</span>
+<span style="color:#f92672">&gt;&gt;</span><span style="color:#f92672">&gt;</span> (<span style="color:#ae81ff">0x10</span><span style="color:#f92672">+</span><span style="color:#ae81ff">0x1f</span>)<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">4</span>
+<span style="color:#ae81ff">2</span>
+<span style="color:#f92672">&gt;&gt;</span><span style="color:#f92672">&gt;</span> (<span style="color:#ae81ff">0x11</span><span style="color:#f92672">+</span><span style="color:#ae81ff">0x1f</span>)<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">4</span>
+<span style="color:#ae81ff">3</span>
+<span style="color:#f92672">&gt;&gt;</span><span style="color:#f92672">&gt;</span> (<span style="color:#ae81ff">0x21</span><span style="color:#f92672">+</span><span style="color:#ae81ff">0x1f</span>)<span style="color:#f92672">&gt;&gt;</span><span style="color:#ae81ff">4</span>
+<span style="color:#ae81ff">4</span>
+</code></pre></div><h5 id="ntpool_header-metadata-header-for-all-pool-chunks">nt!pool_header metadata header for all pool chunks</h5>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_pool_header
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> PreviousSize     : Pos <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">8</span> Bits
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> PoolIndex        : Pos <span style="color:#ae81ff">8</span>, <span style="color:#ae81ff">8</span> Bits
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> BlockSize        : Pos <span style="color:#ae81ff">16</span>, <span style="color:#ae81ff">8</span> Bits
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> PoolType         : Pos <span style="color:#ae81ff">24</span>, <span style="color:#ae81ff">8</span> Bits
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> Ulong1           : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x004</span> PoolTag          : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x008</span> ProcessBilled    : Ptr64 _EPROCESS
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x008</span> AllocatorBackTraceIndex : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x00a</span> PoolTagHash      : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x00c</span> Padding[<span style="color:#ae81ff">0x4</span>]       <span style="color:#f92672">:</span> Uint1B
+</code></pre></div><ul>
+<li><strong>PreviousSize</strong> - BlockSize of preceding pool chunk
+<ul>
+<li>Used to locate previous chunk&rsquo;s pool header for merging to reduce fragmentation</li>
+<li>If PreviousSize if 0, then chunk at beginning of pool</li>
+</ul>
+</li>
+<li><strong>PoolIndex</strong> - index into pool descriptor array <code>nt!ExpPagedPoolDescirptor</code> or <code>nt!ExpNonPagedPoolDescriptor</code> to get corresponding <code>nt!pool_descriptor</code></li>
+<li>Chunk is freed into <code>Pool_Descriptor-&gt;ListHeads[BlockSize]</code></li>
+<li><strong>PoolType</strong>
+<ul>
+<li>PoolType is 0 if the chunk is free</li>
+<li>If Busy, PoolType is (enum POOL_TYPE | pool_in_use)</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_pool_type
+   NonPagedPool <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n0
+   PagedPool <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n1
+   NonPagedPoolMustSucceed <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n2
+   DontUseThisType <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n3
+   NonPagedPoolCacheAligned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n4
+   PagedPoolCacheAligned <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n5
+   NonPagedPoolCacheAlignedMustS <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n6
+   MaxPoolType <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n7
+   NonPagedPoolSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n32
+   PagedPoolSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n33
+   NonPagedPoolMustSucceedSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n34
+   DontUseThisTypeSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n35
+   NonPagedPoolCacheAlignedSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n36
+   PagedPoolCacheAlignedSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n37
+   NonPagedPoolCacheAlignedMustSSession <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>n38
+</code></pre></div><ul>
+<li>If chunk is free, Pool_Header is followed by _LIST_ENTRY</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_LIST_ENTRY
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> Flink            : Ptr64 _LIST_ENTRY
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x008</span> Blink            : Ptr64 _LIST_ENTRY
+</code></pre></div><ul>
+<li>Flink and Blink overwritten to obtain write-what-where in previous versions, like Unlink attack in glibc malloc, mitigated in Windows 7</li>
+</ul>
+<h3 id="lookaside-lists">Lookaside Lists</h3>
+<p>Lookaside Lists are pre-allocated buffers, on which simple operations like PUSH and POP (LIFO) can be performed. Lookaside Lists are used to cache frequently used chunks of certain size instead of returning them back to the OS.</p>
+<ul>
+<li>Lookaside Lists take advantage of CPU caching</li>
+<li>They are defined in Processor Control Block <code>ntKPRCB</code></li>
+<li>Paged (PPPagedLookasideList) and non-paged (PPNPagedLookasideList)</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_KPRCB
+... 
+<span style="color:#f92672">+</span><span style="color:#ae81ff">0x780</span> PPLookasideList  : [<span style="color:#ae81ff">16</span>] _PP_LOOKASIDE_LIST
+<span style="color:#f92672">+</span><span style="color:#ae81ff">0x880</span> PPNPagedLookasideList : [<span style="color:#ae81ff">32</span>] _GENERAL_LOOKASIDE_POOL
+<span style="color:#f92672">+</span><span style="color:#ae81ff">0x1480</span> PPPagedLookasideList : [<span style="color:#ae81ff">32</span>] _GENERAL_LOOKASIDE_POOL
+... 
+</code></pre></div><ul>
+<li>Max Blocksize = 0x20, Max size = 0x20*0x10</li>
+<li>Therefore, 32 Lookaside lists</li>
+<li>Lookaside list defined by <code>nt!GENERAL_LOOKASIDE_POOL</code></li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_GENERAL_LOOKASIDE_POOL
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> ListHead         : _SLIST_HEADER
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> SingleListHead   : _SINGLE_LIST_ENTRY
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x010</span> Depth            : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x012</span> MaximumDepth     : Uint2B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x014</span> TotalAllocates   : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x018</span> AllocateMisses   : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x018</span> AllocateHits     : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x01c</span> TotalFrees       : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x020</span> FreeMisses       : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x020</span> FreeHits         : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x024</span> Type             : _POOL_TYPE
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x028</span> Tag              : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x02c</span> Size             : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x030</span> AllocateEx       : Ptr64     <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> 
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x030</span> Allocate         : Ptr64     <span style="color:#66d9ef">void</span><span style="color:#f92672">*</span> 
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x038</span> FreeEx           : Ptr64     <span style="color:#66d9ef">void</span> 
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x038</span> Free             : Ptr64     <span style="color:#66d9ef">void</span> 
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x040</span> ListEntry        : _LIST_ENTRY
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x050</span> LastTotalAllocates : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x054</span> LastAllocateMisses : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x054</span> LastAllocateHits : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x058</span> Future           : [<span style="color:#ae81ff">2</span>] Uint4B
+</code></pre></div><ul>
+<li>SingleListHead.Next points to first free pool chunk on singly-linked Lookaside list</li>
+<li>Size of the Lookaside list is limited by Depth (no. of nodes)</li>
+<li>Depth is adjusted periodically by the balance set manager (nt!KeBalanceSetManager) based on the number of hits and misses on the Lookaside list
+<ul>
+<li>Frequently used Lookaside list =&gt; Larger Depth value</li>
+<li>Initial Depth value = 4 (nt!ExMimimumLookasideDepth)</li>
+<li>MaximumDepth = 256</li>
+</ul>
+</li>
+<li>If Lookaside list is full, pool chunk is freed to the appropriate ListHeads list</li>
+<li>Lookaside lists defined for Session pools
+<ul>
+<li>Paged Session pools allocations use separate Lookaside lists (nt!ExpSessionPoolLookaside) defined in session space.</li>
+<li>Max Blocksize of per Session Lookaside list in 0x19 (nt!ExpSesionPoolSmallLists)</li>
+<li>Session Lookaside lists use <code>nt!GENERAL_LOOKASIDE</code> struct</li>
+<li>Non-paged Session pool used non-paged per processor Lookaside List (PPNPagedLookasideList)</li>
+</ul>
+</li>
+<li>Lookaside lists are disabled if hot/cold page separation flag (nt!ExpPoolFlags &amp; 0x100) is set
+<ul>
+<li>Set at boot-up to increase speed</li>
+<li>Disabled by a timer set in <code>nt!ExpBootFinishedTimer</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="large-pool-allocations">Large Pool Allocations</h3>
+<ul>
+<li>Pool allocations greater than a page, greater than 4080 bytes (+16 header size).</li>
+<li>Handled by nt!ExpAllocateBigPool which calls nt!MiAllocatePoolPages the pool page allocator</li>
+<li>Requested size rounded to pages</li>
+<li>&lsquo;frag&rsquo; chunk of Blocksize 0x1 and PreviousSize 0 is placed after large pool allocation, indicating that a fragment of the allocation is available for use.</li>
+<li>Excess bytes (request_size_rounded_to_pages - request size) are inserted into the PoolDescriptor-&gt;ListHeads[Blocksize]</li>
+</ul>
+<p>KNODE has 4 singly-linked lists</p>
+<ul>
+<li>PagedPoolSListHead for single paged allocations</li>
+<li>NonPagePoolSListHead[3] for page counts 1, 2, 3</li>
+<li>Size of Page Lookaside lists determined by number of physical pages in system</li>
+</ul>
+<p>If Lookaside lists cannot be used and allocation bitmap is used to obtain the requested pool pages.</p>
+<ul>
+<li>Bitmap (RTL_BITMAP) - array of bits indicating memory pages in use</li>
+<li>Bitmap created for every major pool type</li>
+<li>First index holding requested unused pages returned</li>
+<li>Paged pool bitmap in nt!MMPagedPoolInfo</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#ae81ff">0</span><span style="color:#f92672">:</span> kd<span style="color:#f92672">&gt;</span> dt nt<span style="color:#f92672">!</span>_MM_Paged_Pool_info
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x000</span> Mutex            : _KGUARDED_MUTEX
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x038</span> PagedPoolAllocationMap : _RTL_BITMAP
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x048</span> FirstPteForPagedPool : Ptr64 _MMPTE
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x050</span> PagedPoolHint    : Uint4B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x058</span> PagedPoolCommit  : Uint8B
+   <span style="color:#f92672">+</span><span style="color:#ae81ff">0x060</span> AllocatedPagedPool : Uint8B
+</code></pre></div><ul>
+<li>Non-paged bitmap in nt!MiNonPagedPoolBitmap
+Session pool bitmap in MM_SESSION_SPACE</li>
+</ul>
+<p>For large pool allocations nt!ExAllocatePoolWithTag requests 8 additional bytes to store the size of the allocation. This value is checked before free for pool overflows.</p>
+<p><strong>Tag</strong> : 4-byte value tagging an allocation to logically identify the driver</p>
+<h3 id="allocation-algorithm">Allocation Algorithm</h3>
+<p>ExAllocatePoolWithTag is called to allocate pool memory. 
+To return a chunk of requested size list check in below order:</p>
+<ul>
+<li>Lookaside lists</li>
+<li>ListHeads</li>
+<li>Page allocated by pool page allocator</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">PVOID <span style="color:#a6e22e">ExAllocatePoolWithTag</span>( POOL_TYPE PoolType,
+ SIZE_T NumberOfBytes,
+ ULONG Tag)
+
+<span style="color:#75715e">// call pool page allocator if size is above 4080 bytes
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (NumberOfBytes <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0xff0</span>) { 
+	<span style="color:#75715e">// call nt!ExpAllocateBigPool
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// attempt to use lookaside lists
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> (PoolType <span style="color:#f92672">&amp;</span> PagedPool) {
+	<span style="color:#66d9ef">if</span> (PoolType <span style="color:#f92672">&amp;</span> SessionPool <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> BlockSize <span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x19</span>) {
+		<span style="color:#75715e">// try the session paged lookaside list 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (BlockSize <span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x20</span>) {
+		 <span style="color:#75715e">// try the per-processor paged lookaside list
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#75715e">// lock paged pool descriptor (round robin or local node) 
+</span><span style="color:#75715e"></span>} 
+<span style="color:#66d9ef">else</span> { <span style="color:#75715e">// NonPagedPool 
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (BlockSize <span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x20</span>) { 
+		<span style="color:#75715e">// try the per-processor non-paged lookaside list 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>	}
+	 <span style="color:#75715e">// lock non-paged pool descriptor (local node) 
+</span><span style="color:#75715e"></span>} 
+
+<span style="color:#75715e">// attempt to use listheads lists 
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> (n <span style="color:#f92672">=</span> BlockSize<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>; n <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">512</span>; n<span style="color:#f92672">+</span><span style="color:#f92672">+</span>) {
+	 <span style="color:#66d9ef">if</span> (ListHeads[n].Flink <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#f92672">&amp;</span>ListHeads[n]) { <span style="color:#75715e">// empty 
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">continue</span>; <span style="color:#75715e">// try next block size 
+</span><span style="color:#75715e"></span>	}
+	<span style="color:#75715e">// safe unlink ListHeads[n].Flink 
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// split if larger than needed 
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// return chunk 
+</span><span style="color:#75715e"></span>} 
+<span style="color:#75715e">// no chunk found, call nt!MiAllocatePoolPages 
+</span><span style="color:#75715e"></span><span style="color:#75715e">// split page and return chunk
+</span></code></pre></div><p>When searching the ListHeads for the requested Blocksize, If ListHeads[Blocksize] is empty, the algorithm moves on to ListHeads[Blocksize+1] and so on until it finds a chunk. In this case the chunk will have unused space, and therefore will be split. There are two ways to split the returned chunk :</p>
+<ul>
+<li>
+<p>Page aligned chunk returned</p>
+<ul>
+<li>The allocation is made at the top/front</li>
+</ul>
+</li>
+<li>
+<p>Not Page aligned</p>
+<ul>
+<li>Allocation is made at the bottom/back
+In both cases, the chunk is split and the unused part is inserted to ListHeads based on the Blocksize.</li>
+</ul>
+</li>
+</ul>
+<h3 id="free-algorithm">Free Algorithm</h3>
+<p>Since the Pool_Header struct in the allocation contains PoolType, <code>nt!ExFreePool</code> frees chunks to the appropriate list.
+This algorithm also tries to merge adjacent chunks to reduce fragmentation.</p>
+<ul>
+<li>If page aligned nt!MiFreePoolPages is called</li>
+<li>[CHECK] Entry-&gt;BlockSize == NextEntry-&gt;PreviousSize</li>
+<li>If previous chunk or next chunk free, coalescing is done</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">VOID <span style="color:#a6e22e">ExFreePoolWithTag</span>( PVOID Entry, 
+ULONG Tag)
+<span style="color:#66d9ef">if</span> (PAGE_ALIGNED(Entry)) {
+	<span style="color:#75715e">// call nt!MiFreePoolPages 
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>}
+<span style="color:#66d9ef">if</span> (Entry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>BlockSize <span style="color:#f92672">!</span><span style="color:#f92672">=</span> NextEntry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>PreviousSize) 
+	BugCheckEx(BAD_POOL_HEADER);
+
+<span style="color:#66d9ef">if</span> (Entry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>PoolType <span style="color:#f92672">&amp;</span> SessionPagedPool <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> Entry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>BlockSize <span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x19</span>) { 
+	<span style="color:#75715e">// put in session pool lookaside list 
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>} 
+<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> (Entry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>BlockSize <span style="color:#f92672">&lt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x20</span>) {
+	<span style="color:#66d9ef">if</span> (Entry<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>PoolType <span style="color:#f92672">&amp;</span> PagedPool) {
+		<span style="color:#75715e">// put in per-processor paged lookaside list 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#66d9ef">else</span> { <span style="color:#75715e">// NonPagedPool
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// put in per-processor non-paged lookaside list 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// return on success 
+</span><span style="color:#75715e"></span>	} 
+} <span style="color:#66d9ef">if</span> (ExpPoolFlags <span style="color:#f92672">&amp;</span> DELAY_FREE) { <span style="color:#75715e">// 0x200 
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (PendingFreeDepth <span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x20</span>) { 
+		<span style="color:#75715e">// call nt!ExDeferredFreePool 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#75715e">// add Entry to PendingFrees list 
+</span><span style="color:#75715e"></span>} <span style="color:#66d9ef">else</span> { 
+	<span style="color:#66d9ef">if</span> (IS_FREE(NextEntry) <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>PAGE_ALIGNED(NextEntry)) {
+		<span style="color:#75715e">// safe unlink next entry 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// merge next with current chunk 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#66d9ef">if</span> (IS_FREE(PreviousEntry)) { 
+		<span style="color:#75715e">// safe unlink previous entry 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// merge previous with current chunk 
+</span><span style="color:#75715e"></span>	} <span style="color:#66d9ef">if</span> (IS_FULL_PAGE(Entry)) 
+	<span style="color:#75715e">// call nt!MiFreePoolPages 
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">else</span> { 
+	<span style="color:#75715e">// insert Entry to ListHeads[BlockSize - 1]
+</span><span style="color:#75715e"></span>	}
+}
+</code></pre></div><p>DELAY_FREE (<code>nt!ExpPoolFlags</code> &amp; 0x200) if set, calling ExFreePoolWithTag appends  chunks to be freed to PendingFrees list until the PendingFreeDepth is 0x20.
+When the PendingFreeDepth is &gt;= 0x20, ExDefferedFreePool is called to free each node in PendingFrees to respective ListHeads list</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">VOID <span style="color:#a6e22e">ExDeferredFreePool</span>( PPOOL_DESCRIPTOR PoolDesc, 
+BOOLEAN bMultipleThreads) 
+<span style="color:#66d9ef">for</span> each (Entry in PendingFrees) { 
+	<span style="color:#66d9ef">if</span> (IS_FREE(NextEntry) <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> <span style="color:#f92672">!</span>PAGE_ALIGNED(NextEntry)) { 
+		<span style="color:#75715e">// safe unlink next entry 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// merge next with current chunk 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#66d9ef">if</span> (IS_FREE(PreviousEntry)) { 
+		<span style="color:#75715e">// safe unlink previous entry 
+</span><span style="color:#75715e"></span>		<span style="color:#75715e">// merge previous with current chunk 
+</span><span style="color:#75715e"></span>	} 
+	<span style="color:#66d9ef">if</span> (IS_FULL_PAGE(Entry)) 
+		<span style="color:#75715e">// add to full page list 
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">else</span> { 
+		<span style="color:#75715e">// insert Entry to ListHeads[BlockSize - 1] 
+</span><span style="color:#75715e"></span>	} 
+} 
+<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">each</span> (page in full page list) { 
+	<span style="color:#75715e">// call nt!MiFreePoolPages 
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>Note :</p>
+<ul>
+<li>Insertion to Lookaside and ListHeads are at the head</li>
+<li>Fragment/ split chunk insertions are at the tail</li>
+<li>Allocations are made from the front of the list</li>
+</ul>
+<h3 id="kernel-pool-attacks">Kernel Pool Attacks</h3>
+<h4 id="listentry-flink-overwrite">ListEntry Flink Overwrite</h4>
+<p>When a chunk is being allocated from any of the ListHeads list, The LIST_ENTRY structure of the head is validated.
+<strong>assert(ListHead[n].Flink.Blink===ListHead[n] &amp;&amp; ListHead[n].Blink.Flink==ListHead[n])</strong>
+If only one chunk  is present in the list then, ListHead[n].Flink and ListHead(n).Blink point to the same chunk. Hence both victim.Flink and victim.Blink is checked in the safe unlink. 
+But with more than one chunk :</p>
+<ul>
+<li>The next entry&rsquo;ss Blink [ListHead[n].Flink.Blink) is verified to be be ListHead[n]. This leaves ListHead[n].Flink.Flink unchecked</li>
+<li>Similarly ListHead[n].Blink.Blink is unchecked.
+Assuming we have a UAF, and there are more than 1 entry in the ListHead list corresponding to the size of the entry, this allows us to overwrite the victim.Flink
+So during the unlink operation the Blink of the fake chunk that we overwrite victim.Flink with, is written with ListHead[n].
+The check should instead have been :</li>
+</ul>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">victim <span style="color:#f92672">=</span> Listhead[n].Flink;
+assert(victim.Flink.Blink<span style="color:#f92672">=</span><span style="color:#f92672">=</span>victim <span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span> victim.Blink.FLink<span style="color:#f92672">=</span><span style="color:#f92672">=</span>victim);
+</code></pre></div><p>This is similar to what is seen in glibc</p>
+<h4 id="lookaside-next-pointer-overwrite">Lookaside Next Pointer Overwrite</h4>
+<ul>
+<li>Singly linked listed with each entry holding pointer to next entry.</li>
+<li>Pool chunk freed into Lookaside list when:
+<ul>
+<li>BlockSize &lt;= 0x20 (paged/non-paged)</li>
+<li>BlockSize &lt;= 0x19 (paged session)</li>
+<li>Lookaside list is not full</li>
+<li>Hot/cold page separation disabled (ExpPoolFlags &amp; 0x100)</li>
+</ul>
+</li>
+<li>Pool page is freed to Lookaside list when:
+<ul>
+<li>NumberOfPages  = 1 for paged pool pages</li>
+<li>NumberOfPages &lt;= 3 for non-paged pool pages</li>
+<li>Lookaside list for target page count is not full</li>
+</ul>
+</li>
+</ul>
+<p><strong>Overwriting the next pointer will give you an arbitrary write like fastbins in  glibc malloc.</strong></p>
+<ul>
+<li>Next pointer after POOL_HEADER, hence 16-byte write required.</li>
+</ul>
+<p><strong>Exploit Hinderance:</strong> <code>nt!MiAllocatePoolPages</code> is called every time a page is requested by the OS. Therefore heap feng-shui with pool pages is difficult as page allocations are made frequently by other system threads.
+When working with pool chunks, we can use infrequently used pool chunk sizes to get more control over the heap layout when triggering the vulnerability.
+We examine the  <code>TotalAllocates</code> value in the <code>nt!_GENERAL_LOOKASIDE_POOL</code> to get the frequency.</p>
+<h4 id="pendingfrees-next-pointer-overwrite">PendingFrees Next Pointer Overwrite</h4>
+<p>PendingFree stores all the pool chunks waiting to be freed in a singly linked list.
+No integrity checks are performed on this list.
+<strong>We can overwrite the next entry in this list and obtain an arbitrary free into the ListHead lists when ExDeferredFreePool is called. After that we can allocate an arbitrary chunk of the ListHeads.</strong>
+<strong>Exploit Hindrance:</strong> ExDeferredFreePool is called after about every 32 frees. Many threads are scheduled to the same pool in parallel and multi-core systems. 
+Therefore it is likely that a chunk we abused would have been freed into LIstHead and would have satisfied some other request before our request for arbitrary write.
+Attacks on PendingFree list of less frequently used session pool is more feasible.</p>
+<h4 id="poolindex-overwrite">PoolIndex Overwrite</h4>
+<p>The pool chunk is free in to the ListHeads array of the PoolDescriptor denoted by the <code>POOL_HEADER-&gt;PoolIndex</code>. 
+<strong>There is no validation on the PoolIndex; it can be an out of bound index.</strong></p>
+<ul>
+<li>only 2-byte overflow required.</li>
+<li>Null page should be mappable.</li>
+<li>For PoolType = Paged pool, PoolIndex indices into <code>nt!ExpPagedPoolDescriptor</code> array.</li>
+<li>For PoolType = Non-paged pool, PoolIndex indices into <code>nt!ExpNonPagedPoolDescriptor</code> array.</li>
+<li>Unlike retail builds, in checked builds PoolIndex is validated against <code>nt!ExpNumberOfPagedPools</code>.</li>
+</ul>
+<p><strong>By overwriting the PoolIndex with an out of bound index a null dereference is triggered. Allocating the null page in userspace and faking the <code>nt!Pool_descriptor</code> structure lets us perform all the previously mentioned attacks and more.</strong></p>
+<p>Note: Access to PoolDescriptor-&gt;ListHead[n] list is locked so that threads cannot access them at the same time.</p>
+
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#numa-non-uniform-memory-architecture">NUMA (Non-uniform Memory Architecture)</a></li>
+        <li><a href="#system-memory-pools">System Memory Pools</a></li>
+        <li><a href="#two-types-of-pool-memory">Two types of pool memory:</a></li>
+        <li><a href="#pool-descriptor">Pool Descriptor</a></li>
+        <li><a href="#lookaside-lists">Lookaside Lists</a></li>
+        <li><a href="#large-pool-allocations">Large Pool Allocations</a></li>
+        <li><a href="#allocation-algorithm">Allocation Algorithm</a></li>
+        <li><a href="#free-algorithm">Free Algorithm</a></li>
+        <li><a href="#kernel-pool-attacks">Kernel Pool Attacks</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/thinktwice/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">Think-twice - HackTM 2020</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

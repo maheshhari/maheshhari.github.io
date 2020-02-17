@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Exploitating Life on slashb4sh</title>
+    <link>/</link>
+    <description>Recent content in Exploitating Life on slashb4sh</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Wed, 09 Apr 2014 00:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Windows 7 Kernel Pool Internals</title>
+      <link>/blog/win7kernelpoolinternals/</link>
+      <pubDate>Sat, 08 Feb 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/win7kernelpoolinternals/</guid>
+      <description>Notes on Windows 7 Kernel Pool Internals that I learned from this paper
+NUMA (Non-uniform Memory Architecture)  Dedicate different memory bank for different processors Quicker access to local memory Processors and memory are maintained in units called nodes via the KNODE structure in kernel.  0: kd&amp;gt; dt nt!_KNODE+0x000 PagedPoolSListHead : _SLIST_HEADER+0x010 NonPagedPoolSListHead : [3] _SLIST_HEADER+0x040 Affinity : _GROUP_AFFINITY+0x050 ProximityId : Uint4B+0x054 NodeNumber : Uint2B+0x056 PrimaryNodeNumber : Uint2B+0x058 MaximumProcessors : UChar+0x059 Color : UChar+0x05a Flags : _flags+0x05b NodePad0 : UChar+0x05c Seed : Uint4B+0x060 MmShiftedColor : Uint4B+0x068 FreeCount : [2] Uint8B+0x078 Right : Uint4B+0x07c Left : Uint4B+0x080 CachedKernelStacks : _CACHED_KSTACK_LIST+0x0a0 ParkLock : Int4B+0x0a4 NodePad1 : Uint4B Multi-node system; nt!</description>
+    </item>
+    
+    <item>
+      <title>Think-twice - HackTM 2020</title>
+      <link>/blog/thinktwice/</link>
+      <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/thinktwice/</guid>
+      <description>Linux userpace exploitation by parsing ELF for symbol addresses with arbitary read
+Challenge points: 491 No. of solves: 14 Solved by : @sherl0ck, @slashb4sh
+The challenge program is rather simple. You get infinite number of arbitary reads, and one arbitary write. The libc is not given and the path of the loader is specified as ./loader.so, hinting that a custom libc and loader is used. This is confirmed as no libc version matches are found on libc database search with the leaks obtained from the server.</description>
+    </item>
+    
+    <item>
+      <title>TCalc - Hack.lu CTF 2019</title>
+      <link>/blog/tcalc/</link>
+      <pubDate>Sat, 26 Oct 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/tcalc/</guid>
+      <description>Linux heap exploitation of an arbitary free vulnerability
+Challenge points: 381 No. of solves: 16
+This was a fun challenge. It is a menu driven program where you can store a set of numbers and also retreive the average of the numbers. The challenges runs in an environment with glibc 2.30, It has tcache double free mitigation, as explained in my last blog.
+$ ./chall ------------------ What do? 1) get numbers 2) print_average 3) delete_numbers &amp;gt; get numbers</description>
+    </item>
+    
+    <item>
+      <title>Schnurtelefon - Hack.lu CTF 2019</title>
+      <link>/blog/schnurtelefon/</link>
+      <pubDate>Thu, 24 Oct 2019 22:00:00 +0000</pubDate>
+      
+      <guid>/blog/schnurtelefon/</guid>
+      <description>Linux client-server application heap exploitation
+Challenge points: 434 No. of solves: 11
+There are two binaries; server and client, the user interacts with server via the client. The server is a simple note storage system. The environment has glibc version 2.27 (easy tcache double free corruptions).
+There are 5 operations in this note challenge
+  store note
+ client reads the input from the user and sends it to the server The server maintains an array of size 16, allocated pointer of fixed size 0x30 is stored in the first empty location.</description>
+    </item>
+    
+    <item>
+      <title>remain - SECCON CTF Quals 2019</title>
+      <link>/blog/remain/</link>
+      <pubDate>Sun, 20 Oct 2019 15:00:00 +0000</pubDate>
+      
+      <guid>/blog/remain/</guid>
+      <description>linux heap exploitation challenge with glibc 2.30
+Challenge points: 418 No. of solves: 19
+A glibc heap Note challenge
+Remain MENU **************** 1. Add 2. Edit 3. Delete 0. Exit **************** &amp;gt; Add
+ malloc(0x48), fixed size read input into chunk check if space available in table[10] if full are there, then free chunk, else add to table  Edit
+ Edit a chunk with size as strlen(content in the given table idx)  Delete</description>
+    </item>
+    
+    <item>
+      <title>bartender - InCTF Internationals 2019</title>
+      <link>/blog/bartender/</link>
+      <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
+      
+      <guid>/blog/bartender/</guid>
+      <description>&lt;p&gt;Writeup from InCTFi 2019 bartender
+Windows 32-bit SEH exploitation&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>BabyTcache - HITCON CTF 2018</title>
+      <link>/blog/babytcache/</link>
+      <pubDate>Mon, 14 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/babytcache/</guid>
+      <description>Linux GLIBC Heap Exploitation of a null-byte overflow
+$$$$$$$$$$$$$$$$$$$$$$$$$$$🍊 Baby Tcache 🍊$$$$$$$$$$$$$$$$$$$$$$$$$$$$ 1. New heap $$ 2. Delete heap $$ 3. Exit $$$$$$$$$$$$$$$$$$$$$$$$$$$$Your choice: $There are two functionalities, create a new chunk and free chunk created. The chunks created are stored as an array in bss. You can create 10 chunks at max.
+Mitigations gdb-peda$ checksecCANARY : ENABLEDFORTIFY : ENABLEDNX : ENABLEDPIE : ENABLEDRELRO : FULLThe vulnerability There is a null byte overflow when you create a new chunk.</description>
+    </item>
+    
+    <item>
+      <title>SleepyHolder - HITCON CTF 2016</title>
+      <link>/blog/sleepyholder/</link>
+      <pubDate>Fri, 11 Jan 2019 22:00:00 +0000</pubDate>
+      
+      <guid>/blog/sleepyholder/</guid>
+      <description>Linux GLIBC Heap Exploitation of a Use-after-Free
+Waking Sleepy Holder up ... Hey! Do you have any secret? I can help you to hold your secrets, and no one will be able to see it :) 1. Keep secret 2. Wipe secret 3. Renew secret This challenge involves three chunks of three different sizes, a fastbin size 0x30, a large bin size 0xfb0 and a chunk of size 0x61a80 which gets allocated in a newly maped region.</description>
+    </item>
+    
+    <item>
+      <title>BabyHeap - HITCON CTF 2018</title>
+      <link>/blog/babyheap/</link>
+      <pubDate>Mon, 07 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/babyheap/</guid>
+      <description>Linux GLIBC Heap Exploitation of a null-byte overflow
+#########################Baby Heap#########################1 . New2 . Delete3 . Edit4 . Exit#########################Your choice:The program lets me create a structure in the heap. The structure goes like this
+struct data {unsigned long size;char name[8];char * content;}I can also free and edit the structure, but each of these actions can be performed only once.</description>
+    </item>
+    
+    <item>
+      <title>TAMU CTF 2018</title>
+      <link>/blog/tamu18/</link>
+      <pubDate>Mon, 07 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/tamu18/</guid>
+      <description>This school CTF had a good set of stack based challenges for beginners
+pwn1 32-bit executable, dynamically linked, not stripped
+When you run the executable in the terminal, the program simple asks for an input and checks whether it is the secret it is looking for or not.
+debugging in GDB&amp;hellip;
+gdb-peda$ checksecCANARY : disabledFORTIFY : disabledNX : ENABLEDPIE : disabledRELRO : PartialGoing through the assembly code, we can see that see a gets() function.</description>
+    </item>
+    
+    <item>
+      <title>About Me</title>
+      <link>/about/</link>
+      <pubDate>Wed, 09 Apr 2014 00:00:00 +0000</pubDate>
+      
+      <guid>/about/</guid>
+      <description>Currently pursuing BTech in Computer Science and Engineering at Amrita Vishwa Vidyapeetham, Amritapuri.
+Member of CTF team bi0s
+Interests:
+ Windows Internals Windows/Linux Kernel Exploitation Userpace Exploitation and heap internals Reverse Engineering  Contact:
+ Email : maheshpdm2@gmail.com Twitter : @slashb4sh  </description>
+    </item>
+    
+  </channel>
+</rss>

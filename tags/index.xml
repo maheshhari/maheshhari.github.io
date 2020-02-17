@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on slashb4sh</title>
+    <link>/tags/</link>
+    <description>Recent content in Tags on slashb4sh</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Tue, 04 Feb 2020 13:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>CTF</title>
+      <link>/tags/ctf/</link>
+      <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/ctf/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Pwn</title>
+      <link>/tags/pwn/</link>
+      <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/pwn/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>writeup</title>
+      <link>/tags/writeup/</link>
+      <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/writeup/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>InCTFi</title>
+      <link>/tags/inctfi/</link>
+      <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
+      
+      <guid>/tags/inctfi/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Windows</title>
+      <link>/tags/windows/</link>
+      <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
+      
+      <guid>/tags/windows/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>write-up</title>
+      <link>/tags/write-up/</link>
+      <pubDate>Fri, 11 Jan 2019 22:00:00 +0000</pubDate>
+      
+      <guid>/tags/write-up/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>ROP</title>
+      <link>/tags/rop/</link>
+      <pubDate>Mon, 07 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/rop/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>stack</title>
+      <link>/tags/stack/</link>
+      <pubDate>Mon, 07 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/stack/</guid>
+      <description></description>
+    </item>
+    
+  </channel>
+</rss>

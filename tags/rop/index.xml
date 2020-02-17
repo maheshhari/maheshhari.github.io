@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ROP on slashb4sh</title>
+    <link>/tags/rop/</link>
+    <description>Recent content in ROP on slashb4sh</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <lastBuildDate>Mon, 07 Jan 2019 13:00:00 +0000</lastBuildDate>
+    
+	<atom:link href="/tags/rop/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>TAMU CTF 2018</title>
+      <link>/blog/tamu18/</link>
+      <pubDate>Mon, 07 Jan 2019 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/tamu18/</guid>
+      <description>This school CTF had a good set of stack based challenges for beginners
+pwn1 32-bit executable, dynamically linked, not stripped
+When you run the executable in the terminal, the program simple asks for an input and checks whether it is the secret it is looking for or not.
+debugging in GDB&amp;hellip;
+gdb-peda$ checksecCANARY : disabledFORTIFY : disabledNX : ENABLEDPIE : disabledRELRO : PartialGoing through the assembly code, we can see that see a gets() function.</description>
+    </item>
+    
+  </channel>
+</rss>
