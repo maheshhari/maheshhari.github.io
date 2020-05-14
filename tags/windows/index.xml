@@ -5,10 +5,31 @@
     <link>/tags/windows/</link>
     <description>Recent content in Windows on Exploiting Life</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Fri, 11 Oct 2019 16:45:33 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 12 May 2020 13:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/windows/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>BabyKernel - Dragon CTF 2019</title>
+      <link>/blog/babykernel/</link>
+      <pubDate>Tue, 12 May 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/babykernel/</guid>
+      <description>Windows Kernel Exploitation challenge. ProbForWrite Bypass with integer overflow bug
+Analysis We have to escalate priveleges to SYSTEM through the vulnerable driver SecureDrv.sys. Analysing the driver and provided sample client code, we can see that the IOCTL handler handles three operations; protect, unprotect and act.
+\\ IDA decompilationswitch ( v3-&amp;gt;Parameters.Read.ByteOffset.LowPart ){case 0x226203u:v6 = Protect;goto LABEL_9;case 0x226207u:v6 = unProtect;LABEL_9:func_pointer = v6;break;case 0x22620Bu:v5 = func_pointer(v3-&amp;gt;Parameters.</description>
+    </item>
+    
+    <item>
+      <title>Windows 7 Kernel Pool Internals</title>
+      <link>/blog/win7kernelpoolinternals/</link>
+      <pubDate>Sat, 08 Feb 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/blog/win7kernelpoolinternals/</guid>
+      <description>Notes on Windows 7 Kernel Pool Internals that I learned from this paper
+NUMA (Non-uniform Memory Architecture)  Dedicate different memory bank for different processors Quicker access to local memory Processors and memory are maintained in units called nodes via the KNODE structure in kernel.  0: kd&amp;gt; dt nt!_KNODE+0x000 PagedPoolSListHead : _SLIST_HEADER+0x010 NonPagedPoolSListHead : [3] _SLIST_HEADER+0x040 Affinity : _GROUP_AFFINITY+0x050 ProximityId : Uint4B+0x054 NodeNumber : Uint2B+0x056 PrimaryNodeNumber : Uint2B+0x058 MaximumProcessors : UChar+0x059 Color : UChar+0x05a Flags : _flags+0x05b NodePad0 : UChar+0x05c Seed : Uint4B+0x060 MmShiftedColor : Uint4B+0x068 FreeCount : [2] Uint8B+0x078 Right : Uint4B+0x07c Left : Uint4B+0x080 CachedKernelStacks : _CACHED_KSTACK_LIST+0x0a0 ParkLock : Int4B+0x0a4 NodePad1 : Uint4B Multi-node system; nt!</description>
+    </item>
     
     <item>
       <title>bartender - InCTF Internationals 2019</title>

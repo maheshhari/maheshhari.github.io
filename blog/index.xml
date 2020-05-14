@@ -5,10 +5,21 @@
     <link>/blog/</link>
     <description>Recent content in Blogs on Exploiting Life</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Sat, 08 Feb 2020 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 12 May 2020 13:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>BabyKernel - Dragon CTF 2019</title>
+      <link>/blog/babykernel/</link>
+      <pubDate>Tue, 12 May 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/blog/babykernel/</guid>
+      <description>Windows Kernel Exploitation challenge. ProbForWrite Bypass with integer overflow bug
+Analysis We have to escalate priveleges to SYSTEM through the vulnerable driver SecureDrv.sys. Analysing the driver and provided sample client code, we can see that the IOCTL handler handles three operations; protect, unprotect and act.
+\\ IDA decompilationswitch ( v3-&amp;gt;Parameters.Read.ByteOffset.LowPart ){case 0x226203u:v6 = Protect;goto LABEL_9;case 0x226207u:v6 = unProtect;LABEL_9:func_pointer = v6;break;case 0x22620Bu:v5 = func_pointer(v3-&amp;gt;Parameters.</description>
+    </item>
     
     <item>
       <title>Windows 7 Kernel Pool Internals</title>

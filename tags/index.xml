@@ -5,10 +5,28 @@
     <link>/tags/</link>
     <description>Recent content in Tags on Exploiting Life</description>
     <generator>Hugo -- gohugo.io</generator>
-    <lastBuildDate>Tue, 04 Feb 2020 13:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Tue, 12 May 2020 13:00:00 +0000</lastBuildDate>
     
 	<atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Kernel</title>
+      <link>/tags/kernel/</link>
+      <pubDate>Tue, 12 May 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/kernel/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Windows</title>
+      <link>/tags/windows/</link>
+      <pubDate>Tue, 12 May 2020 13:00:00 +0000</pubDate>
+      
+      <guid>/tags/windows/</guid>
+      <description></description>
+    </item>
     
     <item>
       <title>CTF</title>
@@ -29,7 +47,7 @@
     </item>
     
     <item>
-      <title>Writeup</title>
+      <title>writeup</title>
       <link>/tags/writeup/</link>
       <pubDate>Tue, 04 Feb 2020 13:00:00 +0000</pubDate>
       
@@ -43,15 +61,6 @@
       <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
       
       <guid>/tags/inctfi/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Windows</title>
-      <link>/tags/windows/</link>
-      <pubDate>Fri, 11 Oct 2019 16:45:33 +0000</pubDate>
-      
-      <guid>/tags/windows/</guid>
       <description></description>
     </item>
     
